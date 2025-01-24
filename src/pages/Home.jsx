@@ -1,6 +1,7 @@
 import React, { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import Loader from "../components/Loader";
+import spaceStation from "../models/spaceStation";
 
 const Home = () => {
   return (
@@ -15,6 +16,8 @@ const Home = () => {
           <pointLight />
           <spotLight />
           <hemisphereLight />
+
+          <spaceStation />
         </Suspense>
       </Canvas>
     </section>
