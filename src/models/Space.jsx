@@ -1,10 +1,10 @@
-import React, { useRef } from 'react'
-import { useGLTF } from '@react-three/drei'
-import spaceScene from '../assets/3d/space.glb'
-import { useFrame } from '@react-three/fiber';
+import React, { useRef } from "react";
+import { useGLTF } from "@react-three/drei";
+import spaceScene from "/public/models/3d/space.glb";
+import { useFrame } from "@react-three/fiber";
 
 export function Space(props) {
-  const { nodes, materials } = useGLTF(spaceScene)
+  const { nodes, materials } = useGLTF(spaceScene);
   const spaceRef = useRef();
 
   useFrame((_, delta) => {
@@ -15,7 +15,11 @@ export function Space(props) {
 
   return (
     <group {...props} dispose={null} ref={spaceRef}>
-      <group position={[-1.007, -6.611, 0]} rotation={[Math.PI / 2, 0, -Math.PI]} scale={0.05}>
+      <group
+        position={[-1.007, -6.611, 0]}
+        rotation={[Math.PI / 2, 0, -Math.PI]}
+        scale={0.05}
+      >
         <group rotation={[Math.PI / 2, 0, 0]}>
           <mesh
             castShadow
@@ -29,7 +33,7 @@ export function Space(props) {
         </group>
       </group>
     </group>
-  )
+  );
 }
 
-useGLTF.preload(spaceScene)
+useGLTF.preload(spaceScene);

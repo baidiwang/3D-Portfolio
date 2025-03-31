@@ -6,18 +6,22 @@ Source: https://sketchfab.com/3d-models/animated-astronaut-in-space-suit-loop-13
 Title: Animated Astronaut in Space Suit Loop
 */
 
-import React, { useRef } from 'react'
-import { useGLTF, useAnimations } from '@react-three/drei'
-import astronautScene from '../assets/3d/astronaut.glb'
+import React, { useRef } from "react";
+import { useGLTF, useAnimations } from "@react-three/drei";
+import astronautScene from "/public/models/3d/astronaut.glb";
 
 export function Astronaut(props) {
-  const group = useRef()
-  const { nodes, materials, animations } = useGLTF(astronautScene)
-  const { actions } = useAnimations(animations, group)
+  const group = useRef();
+  const { nodes, materials, animations } = useGLTF(astronautScene);
+  const { actions } = useAnimations(animations, group);
   return (
     <group ref={group} {...props} dispose={null}>
       <group name="Sketchfab_Scene">
-        <group name="Sketchfab_model" rotation={[-Math.PI / 2, 0, 0]} scale={0.2}>
+        <group
+          name="Sketchfab_model"
+          rotation={[-Math.PI / 2, 0, 0]}
+          scale={0.2}
+        >
           <group name="root">
             <group name="GLTF_SceneRootNode" rotation={[Math.PI / 2, 0, 0]}>
               <group name="Walking_astronaut_94">
@@ -70,7 +74,7 @@ export function Astronaut(props) {
         </group>
       </group>
     </group>
-  )
+  );
 }
 
-useGLTF.preload(astronautScene)
+useGLTF.preload(astronautScene);
