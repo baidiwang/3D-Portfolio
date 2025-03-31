@@ -62,14 +62,38 @@ body:has(.card[data-color="green"]:hover) {
     @apply flex flex-wrap gap-7 items-center justify-between;
   }
 
-  .info-box {
+  /* .info-box {
     @apply mx-5 relative flex text-white flex-col gap-3 max-w-2xl neo-brutalism-blue pt-4 pb-12 px-8;
+  } */
+
+  .info-box {
+    /* @apply mx-5 relative flex text-white flex-col gap-3 max-w-2xl px-12 pt-6 pb-6 rounded-xl shadow-xl 
+    bg-white/20 backdrop-blur-md border border-white/10; */
+    @apply absolute left-5 top-1/4 sm:left-10 mx-20 flex text-white flex-col gap-3 max-w-xl px-6 pt-6 pb-6 rounded-xl shadow-xl 
+  bg-white/20 backdrop-blur-md border border-white/10;
   }
+
+  .animate-float {
+    animation: float 2s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+
+  /* .neo-btn {
+    @apply py-3 px-6 rounded-lg text-blue-500 text-center font-semibold sm:w-1/2 w-[90%] -bottom-5 absolute mx-auto right-0 left-0 flex justify-center items-center gap-3;
+  } */
 
   .neo-btn {
-    @apply py-3 px-6 rounded-lg text-blue-500 text-center font-semibold sm:w-1/2 w-[90%] -bottom-5 absolute mx-auto right-0 left-0 flex justify-center items-center gap-3;
+    @apply py-3 px-6 rounded-lg text-gray-700 text-center font-semibold sm:w-1/2 w-[90%] -bottom-5 absolute mx-auto right-0 left-0 flex justify-center items-center gap-3 bg-white shadow-md border border-gray-300;
   }
-
   .cta {
     @apply w-full flex items-center md:flex-row flex-col sm:mt-16 mt-8 gap-7;
   }

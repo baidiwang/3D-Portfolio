@@ -1,10 +1,11 @@
 import { Canvas } from "@react-three/fiber";
 import { Suspense, useEffect, useRef, useState } from "react";
+import { Typewriter } from "react-simple-typewriter";
 
 import sakura from "../assets/sakura.mp3";
 import { HomeInfo, Loader } from "../components";
 import { soundoff, soundon } from "../assets/icons";
-import { SpaceStation } from "../models";
+import { SpaceStation } from "../models/SpaceStation.jsx";
 import { Space } from "../models/Space.jsx";
 
 const Home = () => {
@@ -15,6 +16,15 @@ const Home = () => {
   const [currentStage, setCurrentStage] = useState(null);
   const [isRotating, setIsRotating] = useState(false);
   const [isPlayingMusic, setIsPlayingMusic] = useState(false);
+  const [showButtons, setShowButtons] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [showTypewriter, setShowTypewriter] = useState(true);
+
+  useEffect(() => {
+    if (currentStage === 0) {
+      setShowTypewriter(true);
+    }
+  }, [currentStage]);
 
   useEffect(() => {
     if (isPlayingMusic) {
@@ -61,8 +71,36 @@ const Home = () => {
 
   return (
     <section className="w-full h-screen relative">
+      {!currentStage && (
+        <div className="absolute top-24 left-0 right-0 z-10 flex items-center justify-center">
+          {/* <h1 className="text-white text-center px-4 sm:text-2xl text-lg leading-snug">
+            Hi, I'm <span className="font-semibold">Baidi</span> 👋
+            <br />A Design Engineer in NYC 🗽
+          </h1> */}
+
+          {isLoaded && showTypewriter && (
+            <h1 className="font-mono text-white text-center text-2xl sm:text-2xl font-bold leading-snug">
+              <Typewriter
+                words={["Hi, I'm Baidi", "A UX/Design Engineer in NYC"]}
+                loop={false}
+                cursor
+                cursorStyle="_"
+                typeSpeed={50}
+                deleteSpeed={30}
+                delaySpeed={1200}
+                onTypeDone={() => setShowButtons(true)}
+              />
+            </h1>
+          )}
+        </div>
+      )}
       <div className="absolute top-28 left-0 right-0 z-10 flex items-center justify-center">
-        {currentStage && <HomeInfo currentStage={currentStage} />}
+        {currentStage && (
+          <HomeInfo
+            currentStage={currentStage}
+            setCurrentStage={setCurrentStage}
+          />
+        )}
       </div>
 
       <Canvas
@@ -93,20 +131,22 @@ const Home = () => {
             setIsRotating={setIsRotating}
             setCurrentStage={setCurrentStage}
             // position={islandPosition}
-            rotation={[0.1, 6.2, 0]}
+            rotation={[0.1, 6.15, 0]}
             // scale={islandScale}
+            setIsLoaded={setIsLoaded}
+            setShowTypewriter={setShowTypewriter}
           />
         </Suspense>
       </Canvas>
 
-      <div className="absolute bottom-2 left-2">
+      {/* <div className="absolute bottom-2 left-2">
         <img
           src={!isPlayingMusic ? soundoff : soundon}
           alt="jukebox"
           onClick={() => setIsPlayingMusic(!isPlayingMusic)}
           className="w-10 h-10 cursor-pointer object-contain"
         />
-      </div>
+      </div> */}
     </section>
   );
 };

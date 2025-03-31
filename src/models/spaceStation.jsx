@@ -9,21 +9,50 @@
  * YOU DON'T HAVE TO WRITE EVERYTHING FROM SCRATCH
  */
 
-import { a } from "@react-spring/three";
-import { useEffect, useRef } from "react";
-import { useGLTF, useAnimations } from "@react-three/drei";
+import fontCode from "/public/SpaceMono-Bold.ttf";
+import { a, useSpring } from "@react-spring/three";
+import { useEffect, useRef, useState } from "react";
+import { useGLTF, useAnimations, Text } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 
 import spaceStation from "../assets/3d/spaceStation.glb";
 import { Astronaut } from "./Astronaut.jsx";
+
+const markers = [
+  {
+    id: 1,
+    position: [0, 0.7, 0],
+    lookAt: [0, 15, 0],
+    lookPosition: [0, 10, 20],
+    label: "About Me",
+  },
+  {
+    id: 2,
+    position: [0.7, 0.5, 0.8],
+    lookAt: [0.7, 0.5, 0.8],
+    lookPosition: [25, 0, 30],
+    label: "Engineering",
+  },
+  {
+    id: 3,
+    position: [-0.2, -0.2, 0.9],
+    lookAt: [0.7, 0.5, 0.8],
+    lookPosition: [-10, -10, 25],
+    label: "Design",
+  },
+];
 
 export function SpaceStation({
   isRotating,
   setIsRotating,
   setCurrentStage,
   currentFocusPoint,
+  setIsLoaded,
+  setShowTypewriter,
   ...props
 }) {
+  const [targetPosition, setTargetPosition] = useState(null);
+  const { camera } = useThree();
   const spaceStationRef = useRef();
   // Get access to the Three.js renderer and viewport
   const { gl, viewport } = useThree();
@@ -33,6 +62,8 @@ export function SpaceStation({
 
   const { nodes, materials, animations } = useGLTF(spaceStation);
   const { actions } = useAnimations(animations, group);
+
+  const [showMarkers, setShowMarkers] = useState(false);
 
   // Use a ref for the last mouse x position
   const lastX = useRef(0);
@@ -139,28 +170,28 @@ export function SpaceStation({
   useEffect(() => {
     // Add event listeners for pointer and keyboard events
     const canvas = gl.domElement;
-    canvas.addEventListener("pointerdown", handlePointerDown);
-    canvas.addEventListener("pointerup", handlePointerUp);
-    canvas.addEventListener("pointermove", handlePointerMove);
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("pointerup", handlePointerUp);
+    document.addEventListener("pointermove", handlePointerMove);
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
-    canvas.addEventListener("touchstart", handleTouchStart);
-    canvas.addEventListener("touchend", handleTouchEnd);
-    canvas.addEventListener("touchmove", handleTouchMove);
-    canvas.addEventListener("click", () => {
-      setCurrentStage(1);
-    });
+    document.addEventListener("touchstart", handleTouchStart);
+    document.addEventListener("touchend", handleTouchEnd);
+    document.addEventListener("touchmove", handleTouchMove);
+    // canvas.addEventListener("click", () => {
+    //   setCurrentStage(1);
+    // });
 
     // Remove event listeners when component unmounts
     return () => {
-      canvas.removeEventListener("pointerdown", handlePointerDown);
-      canvas.removeEventListener("pointerup", handlePointerUp);
-      canvas.removeEventListener("pointermove", handlePointerMove);
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("pointerup", handlePointerUp);
+      document.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
-      canvas.removeEventListener("touchstart", handleTouchStart);
-      canvas.removeEventListener("touchend", handleTouchEnd);
-      canvas.removeEventListener("touchmove", handleTouchMove);
+      document.removeEventListener("touchstart", handleTouchStart);
+      document.removeEventListener("touchend", handleTouchEnd);
+      document.removeEventListener("touchmove", handleTouchMove);
     };
   }, [gl, handlePointerDown, handlePointerUp, handlePointerMove]);
 
@@ -219,6 +250,48 @@ export function SpaceStation({
       // }
     }
   });
+
+  const handleMarkerClick = (marker) => {
+    spaceStationRef.current.rotation.y = 0;
+
+    if (marker === targetPosition) {
+      setCurrentStage(0);
+      setTargetPosition({
+        id: 0,
+        position: [0, 0, 0],
+        lookAt: [0, 0, 0],
+        lookPosition: [0, 0, 50],
+        label: "",
+      });
+    } else {
+      setCurrentStage(marker.id);
+      setTargetPosition(marker);
+      setShowTypewriter(false);
+    }
+  };
+
+  const { pos, lookAt, lookPos } = useSpring({
+    pos: targetPosition ? targetPosition.position : camera.position.toArray(),
+    lookAt: targetPosition ? targetPosition.lookAt : [0, 0, 0],
+    lookPos: targetPosition ? targetPosition.lookPosition : [0, 0, 0],
+    config: { mass: 1, tension: 120, friction: 14 },
+  });
+
+  useFrame(() => {
+    if (targetPosition) {
+      camera.position.set(...lookPos.get());
+      camera.lookAt(...lookAt.get());
+    }
+  });
+
+  // Page loads frist then the typewritter effect shows
+  // Maker buttons fade in
+  useEffect(() => {
+    if (nodes && materials) {
+      setIsLoaded(true);
+      setShowMarkers(true);
+    }
+  }, [nodes, materials]);
 
   return (
     <a.group ref={spaceStationRef} {...props}>
@@ -306,12 +379,77 @@ export function SpaceStation({
                     material={materials.spacestation_main}
                   />
                 </group>
-                <Astronaut position={[0, 0.2, 0]} />
+                <Astronaut position={[0, 0.25, 0]} />
+                {markers.map((marker) => (
+                  <GlowingMarker
+                    key={marker.id}
+                    marker={marker}
+                    showMarkers={showMarkers}
+                    onPointerDown={(e) => {
+                      e.stopPropagation();
+                      handleMarkerClick(marker);
+                    }}
+                  />
+                ))}
               </group>
             </group>
           </group>
         </group>
       </group>
     </a.group>
+  );
+}
+
+function GlowingMarker({ marker, showMarkers, ...rest }) {
+  const meshRef = useRef();
+  const [intensity, setIntensity] = useState(0);
+  const [hovered, setHovered] = useState(false);
+
+  useEffect(() => {
+    if (showMarkers) {
+      setIntensity(3);
+    }
+  }, [showMarkers]);
+
+  useFrame(({ clock }) => {
+    const pulse = Math.sin(clock.elapsedTime * 3) * 1.5 + 3;
+    setIntensity(hovered ? pulse + 2 : pulse);
+  });
+
+  return (
+    <mesh
+      ref={meshRef}
+      position={marker.position}
+      onPointerOver={() => setHovered(true)}
+      onPointerOut={() => setHovered(false)}
+      scale={hovered ? 2.2 : 1.8}
+      {...rest}
+    >
+      {/* <sphereGeometry args={[0.015, 32, 32]} /> */}
+      {/* <meshStandardMaterial
+        color={hovered ? "orange" : "#a85032"}
+        transparent
+        opacity={showMarkers ? 1 : 0} // buttons fade in
+        emissive={hovered ? "yellow" : "#a85032"}
+        emissiveIntensity={intensity}
+      /> */}
+      <mesh position={[0, 0.035, -0.01]}>
+        <planeGeometry args={[0.25, 0.02]} />
+        <meshBasicMaterial color="yellow" transparent opacity={0.5} />
+      </mesh>
+      <Text
+        position={[0, 0.05, 0]}
+        fontSize={0.035}
+        color="white"
+        font={fontCode}
+        // outlineWidth={0.003}
+        anchorX="center"
+        anchorY="middle"
+        onPointerOver={(e) => e.object.material.color.set("yellow")}
+        onPointerOut={(e) => e.object.material.color.set("white")}
+      >
+        {marker.label}
+      </Text>
+    </mesh>
   );
 }
