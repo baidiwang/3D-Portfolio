@@ -15,7 +15,7 @@ import { useEffect, useRef, useState } from "react";
 import { useGLTF, useAnimations, Text } from "@react-three/drei";
 import { useFrame, useThree } from "@react-three/fiber";
 
-import spaceStation from "/public/models/3d/spaceStation.glb";
+// import spaceStation from "/public/models/3d/spaceStation.glb";
 import { Astronaut } from "./Astronaut.jsx";
 
 const markers = [
@@ -60,7 +60,9 @@ export function SpaceStation({
 
   const group = useRef();
 
-  const { nodes, materials, animations } = useGLTF(spaceStation);
+  const { nodes, materials, animations } = useGLTF(
+    "/public/models/3d/spaceStation.glb"
+  );
   const { actions } = useAnimations(animations, group);
 
   const [showMarkers, setShowMarkers] = useState(false);

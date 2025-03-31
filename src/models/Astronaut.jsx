@@ -8,11 +8,13 @@ Title: Animated Astronaut in Space Suit Loop
 
 import React, { useRef } from "react";
 import { useGLTF, useAnimations } from "@react-three/drei";
-import astronautScene from "/public/models/3d/astronaut.glb";
+// import astronautScene from "/public/models/3d/astronaut.glb";
 
 export function Astronaut(props) {
   const group = useRef();
-  const { nodes, materials, animations } = useGLTF(astronautScene);
+  const { nodes, materials, animations } = useGLTF(
+    "/public/models/3d/astronaut.glb"
+  );
   const { actions } = useAnimations(animations, group);
   return (
     <group ref={group} {...props} dispose={null}>
@@ -77,4 +79,4 @@ export function Astronaut(props) {
   );
 }
 
-useGLTF.preload(astronautScene);
+useGLTF.preload("/public/models/3d/astronaut.glb");
