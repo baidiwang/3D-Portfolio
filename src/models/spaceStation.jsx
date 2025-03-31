@@ -61,7 +61,7 @@ export function SpaceStation({
   const group = useRef();
 
   const { nodes, materials, animations } = useGLTF(
-    "/public/models/3d/spaceStation.glb"
+    "/models/3d/spaceStation.glb"
   );
   const { actions } = useAnimations(animations, group);
 

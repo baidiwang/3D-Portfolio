@@ -4,7 +4,7 @@ import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 
 export function Space(props) {
-  const { nodes, materials } = useGLTF("/public/models/3d/space.glb");
+  const { nodes, materials } = useGLTF("/models/3d/space.glb");
   const spaceRef = useRef();
 
   useFrame((_, delta) => {
@@ -36,4 +36,4 @@ export function Space(props) {
   );
 }
 
-useGLTF.preload("/public/models/3d/space.glb");
+useGLTF.preload("/models/3d/space.glb");

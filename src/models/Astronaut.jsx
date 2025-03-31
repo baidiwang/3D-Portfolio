@@ -12,9 +12,7 @@ import { useGLTF, useAnimations } from "@react-three/drei";
 
 export function Astronaut(props) {
   const group = useRef();
-  const { nodes, materials, animations } = useGLTF(
-    "/public/models/3d/astronaut.glb"
-  );
+  const { nodes, materials, animations } = useGLTF("/models/3d/astronaut.glb");
   const { actions } = useAnimations(animations, group);
   return (
     <group ref={group} {...props} dispose={null}>
@@ -79,4 +77,4 @@ export function Astronaut(props) {
   );
 }
 
-useGLTF.preload("/public/models/3d/astronaut.glb");
+useGLTF.preload("/models/3d/astronaut.glb");
