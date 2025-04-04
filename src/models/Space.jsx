@@ -1,10 +1,11 @@
 import React, { useRef } from "react";
 import { useGLTF } from "@react-three/drei";
-// import spaceScene from "/public/models/3d/space.glb";
 import { useFrame } from "@react-three/fiber";
 
 export function Space(props) {
-  const { nodes, materials } = useGLTF("/models/3d/space.glb");
+  const { nodes, materials } = useGLTF(
+    "https://pub-900982d21fee47f8b53d6e8c8ac9a4cf.r2.dev/space.glb"
+  );
   const spaceRef = useRef();
 
   useFrame((_, delta) => {
@@ -36,4 +37,6 @@ export function Space(props) {
   );
 }
 
-useGLTF.preload("/models/3d/space.glb");
+useGLTF.preload(
+  "https://pub-900982d21fee47f8b53d6e8c8ac9a4cf.r2.dev/space.glb"
+);

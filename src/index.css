@@ -67,8 +67,6 @@ body:has(.card[data-color="green"]:hover) {
   } */
 
   .info-box {
-    /* @apply mx-5 relative flex text-white flex-col gap-3 max-w-2xl px-12 pt-6 pb-6 rounded-xl shadow-xl 
-    bg-white/20 backdrop-blur-md border border-white/10; */
     @apply absolute left-5 top-1/4 sm:left-10 mx-20 flex text-white flex-col gap-3 max-w-xl px-6 pt-6 pb-6 rounded-xl shadow-xl 
   bg-white/20 backdrop-blur-md border border-white/10;
   }
@@ -204,4 +202,57 @@ body:has(.card[data-color="green"]:hover) {
   border: #fff;
   box-shadow: 0.6vmin 0.6vmin #fff, 1vmin 1vmin #d2e4ff, 1vmin 1vmin #d2e4ff,
     0.65vmin 1vmin #d2e4ff, 1vmin 0.65vmin #d2e4ff;
+}
+
+/* Loader animation */
+@keyframes orbit {
+  0% {
+    transform: rotate(0deg) translateX(64px) rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg) translateX(64px) rotate(-360deg);
+  }
+}
+
+.animate-orbit {
+  animation: orbit 2s linear infinite;
+}
+
+/* 外圈慢速转 */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-spin-slow {
+  animation: spin-slow 6s linear infinite;
+}
+
+/* 中圈中速转 */
+@keyframes spin-medium {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-spin-medium {
+  animation: spin-medium 4s linear infinite;
+}
+
+/* 内圈快速转 */
+@keyframes spin-fast {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-spin-fast {
+  animation: spin-fast 2s linear infinite;
 }

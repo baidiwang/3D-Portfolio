@@ -7,7 +7,7 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
     return (
       <div className="info-box animate-float">
         <button
-          className="absolute top-2 right-3 text-white text-xl hover:text-red-400"
+          className="absolute top-2 right-3 text-white text-xl hover:text-red-400 hidden sm:block"
           onClick={() => setCurrentStage(null)}
         >
           ×
@@ -34,7 +34,7 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
     return (
       <div className="info-box animate-float">
         <button
-          className="absolute top-2 right-3 text-white text-xl hover:text-red-400"
+          className="absolute top-2 right-3 text-white text-xl hover:text-red-400 hidden sm:block"
           onClick={() => setCurrentStage(null)}
         >
           ×
@@ -53,12 +53,14 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
           </span>
         </p>
 
-        <Link
-          to="https://medium.com/@WangPortfolio/web-and-mobile-projects-5922cfb86b60"
-          className="mt-6 bg-white text-black text-center px-4 py-2 rounded hover:bg-gray-200 transition, w-fit mx-auto"
+        <a
+          href="https://medium.com/@WangPortfolio/web-and-mobile-projects-5922cfb86b60"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-6 bg-white text-black text-center px-4 py-2 rounded hover:bg-gray-200 transition w-fit mx-auto"
         >
           Visit full-stack projects
-        </Link>
+        </a>
       </div>
     );
   }
@@ -67,7 +69,7 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
     return (
       <div className="info-box animate-float">
         <button
-          className="absolute top-2 right-3 text-white text-xl hover:text-red-400"
+          className="absolute top-2 right-3 text-white text-xl hover:text-red-400 hidden sm:block"
           onClick={() => setCurrentStage(null)}
         >
           ×
@@ -85,13 +87,14 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
           </span>
         </p>
 
-        <Link
-          to="https://medium.com/@WangPortfolio/daily-data-viz-graphics-bc698435092a"
-          className="mt-6 bg-white text-black text-center px-4 py-2 rounded hover:bg-gray-200 transition, w-fit mx-auto"
+        <a
+          href="https://medium.com/@WangPortfolio/daily-data-viz-graphics-bc698435092a"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-6 bg-white text-black text-center px-4 py-2 rounded hover:bg-gray-200 transition w-fit mx-auto"
         >
           Visit design work
-          {/* <img src={arrow} alt="arrow" className="w-4 h-4 object-contain" /> */}
-        </Link>
+        </a>
       </div>
     );
   }

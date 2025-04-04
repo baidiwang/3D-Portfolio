@@ -36,20 +36,20 @@ const Home = () => {
     };
   }, [isPlayingMusic]);
 
-  const adjustBiplaneForScreenSize = () => {
-    let screenScale, screenPosition;
+  // const adjustBiplaneForScreenSize = () => {
+  //   let screenScale, screenPosition;
 
-    // If screen width is less than 768px, adjust the scale and position
-    if (window.innerWidth < 768) {
-      screenScale = [1.5, 1.5, 1.5];
-      screenPosition = [0, -1.5, 0];
-    } else {
-      screenScale = [3, 3, 3];
-      screenPosition = [0, -4, -4];
-    }
+  //   // If screen width is less than 768px, adjust the scale and position
+  //   if (window.innerWidth < 768) {
+  //     screenScale = [1.5, 1.5, 1.5];
+  //     screenPosition = [0, -1.5, 0];
+  //   } else {
+  //     screenScale = [3, 3, 3];
+  //     screenPosition = [0, -4, -4];
+  //   }
 
-    return [screenScale, screenPosition];
-  };
+  //   return [screenScale, screenPosition];
+  // };
 
   const adjustSpaceStationForScreenSize = () => {
     let screenScale, screenPosition;
@@ -69,8 +69,31 @@ const Home = () => {
   const [spaceStationScale, spaceStationPosition] =
     adjustSpaceStationForScreenSize();
 
+  useEffect(() => {
+    const handleTouchOutside = (e) => {
+      if (window.innerWidth >= 768) return;
+
+      const target = e.target;
+      if (target.closest(".info-box a")) {
+        return;
+      }
+      if (e.target.closest(".info-box")) return;
+
+      setCurrentStage(null);
+    };
+
+    document.addEventListener("pointerdown", handleTouchOutside, {
+      capture: true,
+      // passive: false,
+    });
+
+    return () => {
+      document.removeEventListener("pointerdown", handleTouchOutside, true);
+    };
+  }, [currentStage]);
+
   return (
-    <section className="w-full h-screen relative">
+    <section className="w-full h-screen relative overflow-hidden">
       {!currentStage && (
         <div className="absolute top-24 left-0 right-0 z-10 flex items-center justify-center">
           {/* <h1 className="text-white text-center px-4 sm:text-2xl text-lg leading-snug">
@@ -94,7 +117,7 @@ const Home = () => {
           )}
         </div>
       )}
-      <div className="absolute top-28 left-0 right-0 z-10 flex items-center justify-center">
+      <div className="absolute top-28 left-0 right-0 z-50 flex items-center justify-center pointer-events-auto">
         {currentStage && (
           <HomeInfo
             currentStage={currentStage}
@@ -103,41 +126,43 @@ const Home = () => {
         )}
       </div>
 
-      <Canvas
-        className={`w-full h-screen bg-transparent ${
-          isRotating ? "cursor-grabbing" : "cursor-grab"
-        }`}
-        camera={{ near: 0.1, far: 1000, position: [0, 0, 50] }}
-      >
-        <Suspense fallback={<Loader />}>
-          <directionalLight position={[1, 1, 1]} intensity={2} />
-          <ambientLight intensity={0.5} />
-          <pointLight position={[10, 5, 10]} intensity={2} />
-          <spotLight
-            position={[0, 50, 10]}
-            angle={0.15}
-            penumbra={1}
-            intensity={2}
-          />
-          <hemisphereLight
-            skyColor="#b1e1ff"
-            groundColor="#000000"
-            intensity={1}
-          />
+      <div className="absolute inset-0 z-10 pointer-events-none">
+        <Canvas
+          className={`w-full h-screen bg-transparent ${
+            isRotating ? "cursor-grabbing" : "cursor-grab"
+          }`}
+          camera={{ near: 0.1, far: 1000, position: [0, 0, 50] }}
+        >
+          <Suspense fallback={<Loader />}>
+            <directionalLight position={[1, 1, 1]} intensity={2} />
+            <ambientLight intensity={0.5} />
+            <pointLight position={[10, 5, 10]} intensity={2} />
+            <spotLight
+              position={[0, 50, 10]}
+              angle={0.15}
+              penumbra={1}
+              intensity={2}
+            />
+            <hemisphereLight
+              skyColor="#b1e1ff"
+              groundColor="#000000"
+              intensity={1}
+            />
 
-          <Space isRotating={isRotating} />
-          <SpaceStation
-            isRotating={isRotating}
-            setIsRotating={setIsRotating}
-            setCurrentStage={setCurrentStage}
-            // position={islandPosition}
-            rotation={[0.1, 6.15, 0]}
-            // scale={islandScale}
-            setIsLoaded={setIsLoaded}
-            setShowTypewriter={setShowTypewriter}
-          />
-        </Suspense>
-      </Canvas>
+            <Space isRotating={isRotating} />
+            <SpaceStation
+              isRotating={isRotating}
+              setIsRotating={setIsRotating}
+              setCurrentStage={setCurrentStage}
+              // position={islandPosition}
+              rotation={[0.1, 6.15, 0]}
+              // scale={islandScale}
+              setIsLoaded={setIsLoaded}
+              setShowTypewriter={setShowTypewriter}
+            />
+          </Suspense>
+        </Canvas>
+      </div>
 
       {/* <div className="absolute bottom-2 left-2">
         <img
