@@ -9,23 +9,24 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
         <button
           className="absolute top-2 right-3 text-white text-xl hover:text-red-400 hidden sm:block"
           onClick={() => setCurrentStage(null)}
+          // onClick={() => setCurrentStage(0)}
         >
           ×
         </button>
         <p className="font-mono text-center sm:text-xl">
-          I'm a Design Engineer passionate about crafting engaging web
-          experiences, with a background in data visualization. I specialize in
-          technologies like{" "}
+          Hello world!
+          <br />
+          I'm a Design Engineer with frontend and data-viz experience, currently
+          pursuing my M.S. in Game Development at USC. 🎮
+          <br />
+          <br />
+          I'm exploring spatial computing and real-time interactive experiences
+          using{" "}
           <strong>
-            JavaScript, React, TypeScript, Tailwind, Three.js, Node.js
+            JavaScript, React, TypeScript, Unity, C#, Three.js, WebGL
           </strong>{" "}
           and design tools like{" "}
-          <strong>Figma, Adobe Illustrator and After Effects</strong>. 💻
-          <br />
-          <br />
-          I'm currently exploring the <strong>XR</strong> field, learning{" "}
-          <strong>Unity, C#, Blender, Unreal Engine, Maya</strong>, and other
-          emerging creative tools. 🚀
+          <strong>Figma, Blender, Adobe Illustrator</strong>.
         </p>
       </div>
     );
@@ -40,26 +41,24 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
           ×
         </button>
         <p className="font-mono sm:text-xl text-center">
-          Check my full-stack projects! 🚀
+          Explore my web development projects! 🌐
           <br />
           <br />
           <span>
-            Used{" "}
+            Built with{" "}
             <strong>
-              JavaScipt, React, TypeScript, MUI, Tailwind, Three.js, Node.js,
-              PostgreSQL, MongoDB, Kotlin
+              JavaScript, React, TypeScript, Node.js, PostgreSQL, MongoDB,
+              Tailwind, MUI
             </strong>
-            , etc
           </span>
         </p>
-
         <a
           href="https://medium.com/@WangPortfolio/web-and-mobile-projects-5922cfb86b60"
           target="_blank"
           rel="noopener noreferrer"
           className="mt-6 bg-white text-black text-center px-4 py-2 rounded hover:bg-gray-200 transition w-fit mx-auto"
         >
-          Visit full-stack projects
+          View Web Projects
         </a>
       </div>
     );
@@ -75,45 +74,60 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
           ×
         </button>
         <p className="font-mono text-center sm:text-xl">
-          Check my design work 🚀 <br />
+          Explore my design & visualization work! 🎨 <br />
           <br />
           <span>
-            Used{" "}
+            Data visualization, graphics, and UI/UX design using{" "}
             <strong>
-              Figma, Adobe Illustrator, Datawrapper, Mapbox, D3.js, After
-              Effects, Unity, Blender, UE, Maya
+              Figma, D3.js, Adobe Illustrator, After Effects, Mapbox
             </strong>
-            , etc
           </span>
         </p>
-
         <a
           href="https://medium.com/@WangPortfolio/daily-data-viz-graphics-bc698435092a"
           target="_blank"
           rel="noopener noreferrer"
           className="mt-6 bg-white text-black text-center px-4 py-2 rounded hover:bg-gray-200 transition w-fit mx-auto"
         >
-          Visit design work
+          View Design Work
         </a>
       </div>
     );
   }
 
-  // if (currentStage === 4) {
-  //   return (
-  //     <div className="info-box">
-  //       <p className="font-medium sm:text-xl text-center">
-  //         Need a project done or looking for a dev? <br /> I'm just a few
-  //         keystrokes away
-  //       </p>
-
-  //       <Link to="/contact" className="neo-brutalism-white neo-btn">
-  //         Let's talk
-  //         <img src={arrow} alt="arrow" className="w-4 h-4 object-contain" />
-  //       </Link>
-  //     </div>
-  //   );
-  // }
+  if (currentStage === 4) {
+    return (
+      <div className="info-box animate-float">
+        <button
+          className="absolute top-2 right-3 text-white text-xl hover:text-red-400 hidden sm:block"
+          onClick={() => setCurrentStage(null)}
+        >
+          ×
+        </button>
+        <p className="font-mono text-center sm:text-xl">
+          Dive into my XR & Game development! 🎮
+          <br />
+          <br />
+          <span>
+            Interactive experiences including team-based and personal games and
+            spatial computing applications built with{" "}
+            <strong>
+              Unity, C#, TypeScript, Lens Studio, Blender, Three.js, Unreal
+              Engine
+            </strong>
+          </span>
+        </p>
+        <a
+          href="https://medium.com/@WangPortfolio/game-developmet-2cb0240c5d72"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-6 bg-white text-black text-center px-4 py-2 rounded hover:bg-gray-200 transition w-fit mx-auto"
+        >
+          View XR/Game Projects
+        </a>
+      </div>
+    );
+  }
 
   return null;
 };
