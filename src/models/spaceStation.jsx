@@ -38,6 +38,13 @@ const markers = [
     lookPosition: [-10, -10, 25],
     label: "Design",
   },
+  {
+    id: 4,
+    position: [-0.5, 0.4, 1],
+    lookAt: [-0.8, 0.3, 0.5],
+    lookPosition: [-30, 10, 25],
+    label: "XR/Game",
+  },
 ];
 
 export function SpaceStation({
