@@ -29,7 +29,7 @@ const markers = [
     position: [0.7, 0.5, 0.8],
     lookAt: [0.7, 0.5, 0.8],
     lookPosition: [25, 0, 30],
-    label: "Engineering",
+    label: "Web",
   },
   {
     id: 3,
