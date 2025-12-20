@@ -42,7 +42,7 @@ const markers = [
     id: 4,
     position: [-0.5, 0.4, 1],
     lookAt: [-0.8, 0.3, 0.5],
-    lookPosition: [-30, 10, 25],
+    lookPosition: [-15, 5, 40],
     label: "XR/Game",
   },
 ];
@@ -50,6 +50,7 @@ const markers = [
 export function SpaceStation({
   isRotating,
   setIsRotating,
+  currentStage,
   setCurrentStage,
   currentFocusPoint,
   setIsLoaded,
@@ -261,8 +262,18 @@ export function SpaceStation({
   const handleMarkerClick = (marker) => {
     spaceStationRef.current.rotation.y = 0;
 
-    if (marker === targetPosition) {
+    if (currentStage === marker.id) {
       setCurrentStage(0);
+    } else {
+      setCurrentStage(marker.id);
+      setTargetPosition(marker);
+      setShowTypewriter(false);
+    }
+  };
+
+  useEffect(() => {
+    if (currentStage === 0) {
+      // 重置相机到初始位置
       setTargetPosition({
         id: 0,
         position: [0, 0, 0],
@@ -270,12 +281,9 @@ export function SpaceStation({
         lookPosition: [0, 0, 50],
         label: "",
       });
-    } else {
-      setCurrentStage(marker.id);
-      setTargetPosition(marker);
-      setShowTypewriter(false);
+      setShowTypewriter(true);
     }
-  };
+  }, [currentStage]);
 
   const { pos, lookAt, lookPos } = useSpring({
     pos: targetPosition ? targetPosition.position : camera.position.toArray(),
@@ -441,7 +449,7 @@ function GlowingMarker({ marker, showMarkers, ...rest }) {
         emissiveIntensity={intensity}
       /> */}
       <mesh position={[0, 0.035, -0.01]}>
-        <planeGeometry args={[0.25, 0.02]} />
+        <planeGeometry args={[0.19, 0.02]} />
         <meshBasicMaterial color="yellow" transparent opacity={0.5} />
       </mesh>
       <Text

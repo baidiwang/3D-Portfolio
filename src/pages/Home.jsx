@@ -153,6 +153,7 @@ const Home = () => {
             <SpaceStation
               isRotating={isRotating}
               setIsRotating={setIsRotating}
+              currentStage={currentStage}
               setCurrentStage={setCurrentStage}
               // position={islandPosition}
               rotation={[0.1, 6.15, 0]}

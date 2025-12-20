@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-
 import { arrow } from "../assets/icons";
 
 const HomeInfo = ({ currentStage, setCurrentStage }) => {
@@ -8,8 +7,7 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
       <div className="info-box animate-float">
         <button
           className="absolute top-2 right-3 text-white text-xl hover:text-red-400 hidden sm:block"
-          onClick={() => setCurrentStage(null)}
-          // onClick={() => setCurrentStage(0)}
+          onClick={() => setCurrentStage(0)}
         >
           ×
         </button>
@@ -36,7 +34,7 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
       <div className="info-box animate-float">
         <button
           className="absolute top-2 right-3 text-white text-xl hover:text-red-400 hidden sm:block"
-          onClick={() => setCurrentStage(null)}
+          onClick={() => setCurrentStage(0)}
         >
           ×
         </button>
@@ -69,7 +67,7 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
       <div className="info-box animate-float">
         <button
           className="absolute top-2 right-3 text-white text-xl hover:text-red-400 hidden sm:block"
-          onClick={() => setCurrentStage(null)}
+          onClick={() => setCurrentStage(0)}
         >
           ×
         </button>
@@ -100,7 +98,7 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
       <div className="info-box animate-float">
         <button
           className="absolute top-2 right-3 text-white text-xl hover:text-red-400 hidden sm:block"
-          onClick={() => setCurrentStage(null)}
+          onClick={() => setCurrentStage(0)}
         >
           ×
         </button>
