@@ -3,7 +3,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { Typewriter } from "react-simple-typewriter";
 
 import { HomeInfo, Loader } from "../components";
-import { SpaceStation } from "../models/SpaceStation.jsx";
+import { SpaceStation } from "../models/spaceStation.jsx";
 import { Space } from "../models/Space.jsx";
 
 const Home = () => {
