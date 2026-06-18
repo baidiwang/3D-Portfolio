@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&family=Work+Sans:wght@100;200;300;400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,200..500;1,200..500&family=Poppins:wght@100;200;300;400;500;600;700;800;900&family=Work+Sans:wght@100;200;300;400;500;600;700;800;900&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -35,6 +35,24 @@ body {
   -webkit-backdrop-filter: blur(10px);
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* Passage nav */
+.passage-scene {
+  cursor: none;
+}
+@media (hover: none), (pointer: coarse) {
+  .passage-scene {
+    cursor: auto;
+  }
+}
+@keyframes scPanel {
+  from { opacity: 0; transform: translateX(26px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes scBreathe {
+  0%, 100% { opacity: 0.55; }
+  50%       { opacity: 0.95; }
 }
 
 /* Loader animation */
