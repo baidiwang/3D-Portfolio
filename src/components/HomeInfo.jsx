@@ -13,17 +13,10 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
         <p className="font-mono text-center sm:text-xl">
           Hello world!
           <br />
-          I'm a Design Engineer with frontend and data-viz experience, currently
-          pursuing my M.S. in Game Development at USC. 🎮
+          I'm a Design/Frontend Engineer building AI interfaces and interactive
+          web products. Previously at Google and Axios, now at USC exploring AI
+          agent interfaces, 3D graphics, and real-time interactive experiences.
           <br />
-          <br />
-          I'm exploring spatial computing and real-time interactive experiences
-          using{" "}
-          <strong>
-            JavaScript, React, TypeScript, Unity, C#, Three.js, WebGL
-          </strong>{" "}
-          and design tools like{" "}
-          <strong>Figma, Blender, Adobe Illustrator</strong>.
         </p>
       </div>
     );
@@ -111,7 +104,7 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
           </span>
         </p>
         <Link
-          to="/xr"
+          to="/game-xr"
           className="mt-6 bg-white text-black text-center px-4 py-2 rounded hover:bg-gray-200 transition w-fit mx-auto"
         >
           View XR/Game Projects

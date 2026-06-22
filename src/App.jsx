@@ -19,7 +19,7 @@ const App = () => {
         />
         <Route path="/web"    element={<PassagePage key="web"    slug="web"    />} />
         <Route path="/design" element={<PassagePage key="design" slug="design" />} />
-        <Route path="/xr"     element={<PassagePage key="xr"     slug="xr"     />} />
+        <Route path="/game-xr" element={<PassagePage key="game-xr" slug="game-xr" />} />
       </Routes>
     </Router>
   );
