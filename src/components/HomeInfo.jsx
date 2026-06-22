@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 const HomeInfo = ({ currentStage, setCurrentStage }) => {
   if (currentStage === 1)
     return (
@@ -47,14 +49,12 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
             </strong>
           </span>
         </p>
-        <a
-          href="https://medium.com/@WangPortfolio/web-and-mobile-projects-5922cfb86b60"
-          target="_blank"
-          rel="noopener noreferrer"
+        <Link
+          to="/web"
           className="mt-6 bg-white text-black text-center px-4 py-2 rounded hover:bg-gray-200 transition w-fit mx-auto"
         >
           View Web Projects
-        </a>
+        </Link>
       </div>
     );
   }
@@ -78,14 +78,12 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
             </strong>
           </span>
         </p>
-        <a
-          href="https://medium.com/@WangPortfolio/daily-data-viz-graphics-bc698435092a"
-          target="_blank"
-          rel="noopener noreferrer"
+        <Link
+          to="/design"
           className="mt-6 bg-white text-black text-center px-4 py-2 rounded hover:bg-gray-200 transition w-fit mx-auto"
         >
           View Design Work
-        </a>
+        </Link>
       </div>
     );
   }
@@ -112,14 +110,12 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
             </strong>
           </span>
         </p>
-        <a
-          href="https://medium.com/@WangPortfolio/game-developmet-2cb0240c5d72"
-          target="_blank"
-          rel="noopener noreferrer"
+        <Link
+          to="/xr"
           className="mt-6 bg-white text-black text-center px-4 py-2 rounded hover:bg-gray-200 transition w-fit mx-auto"
         >
           View XR/Game Projects
-        </a>
+        </Link>
       </div>
     );
   }
