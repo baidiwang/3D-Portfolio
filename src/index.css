@@ -18,7 +18,7 @@ body {
 
 @layer utilities {
   .info-box {
-    @apply absolute left-5 top-1/4 sm:left-10 mx-20 flex text-white flex-col gap-3 max-w-xl px-6 pt-6 pb-6 rounded-xl shadow-xl
+    @apply absolute left-5 top-1/4 sm:left-10 mx-20 flex text-white flex-col gap-3 max-w-2xl px-6 pt-6 pb-6 rounded-xl shadow-xl
   bg-white/20 backdrop-blur-md border border-white/10;
   }
 

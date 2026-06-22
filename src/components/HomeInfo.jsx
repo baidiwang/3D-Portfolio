@@ -31,14 +31,14 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
           ×
         </button>
         <p className="font-mono sm:text-xl text-center">
-          Explore my web development projects! 🌐
+          Web & AI projects — from a voice-first AI assistant to full-stack
+          applications.
           <br />
           <br />
           <span>
             Built with{" "}
             <strong>
-              JavaScript, React, TypeScript, Node.js, PostgreSQL, MongoDB,
-              Tailwind, MUI
+              TypeScript, React, Next.js, Tailwind, MUI, Framer Motion, Node.js
             </strong>
           </span>
         </p>
@@ -62,13 +62,13 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
           ×
         </button>
         <p className="font-mono text-center sm:text-xl">
-          Explore my design & visualization work! 🎨 <br />
+          Data visualization and interface design — turning complex data into
+          clear, considered visual stories.
+          <br />
           <br />
           <span>
-            Data visualization, graphics, and UI/UX design using{" "}
-            <strong>
-              Figma, D3.js, Adobe Illustrator, After Effects, Mapbox
-            </strong>
+            Shaped at Axios and beyond, using{" "}
+            <strong>Figma, D3.js, Claude Code, Illustrator</strong>
           </span>
         </p>
         <Link
@@ -91,16 +91,13 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
           ×
         </button>
         <p className="font-mono text-center sm:text-xl">
-          Dive into my XR & Game development! 🎮
+          XR and game development — two Unity/C# games including a
+          Steam-released title, plus mixed-reality experiences.
           <br />
           <br />
           <span>
-            Interactive experiences including team-based and personal games and
-            spatial computing applications built with{" "}
-            <strong>
-              Unity, C#, TypeScript, Lens Studio, Blender, Three.js, Unreal
-              Engine
-            </strong>
+            Built with{" "}
+            <strong>Lens Studio, TypeScript, Unity, C#</strong>
           </span>
         </p>
         <Link
