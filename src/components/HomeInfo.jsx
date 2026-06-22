@@ -36,9 +36,7 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
           <br />
           <span>
             Built with{" "}
-            <strong>
-              TypeScript, React, Next.js, Tailwind, Framer Motion
-            </strong>
+            <strong>TypeScript, React, Next.js, Tailwind, Framer Motion</strong>
             , and more.
           </span>
         </p>
@@ -67,8 +65,7 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
           <br />
           <br />
           <span>
-            Built with{" "}
-            <strong>Figma, D3.js, Illustrator, After Effects</strong>
+            Built with <strong>Figma, D3.js, Illustrator, After Effects</strong>
             , and more.
           </span>
         </p>
@@ -98,15 +95,15 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
           <br />
           <span>
             Built with{" "}
-            <strong>Unity, C#, TypeScript, Lens Studio, Blender</strong>
-            , and more.
+            <strong>Unity, C#, TypeScript, Lens Studio, Blender</strong>, and
+            more.
           </span>
         </p>
         <Link
           to="/game-xr"
           className="mt-6 bg-white text-black text-center px-4 py-2 rounded hover:bg-gray-200 transition w-fit mx-auto"
         >
-          View XR/Game Projects
+          View Game/XR Projects
         </Link>
       </div>
     );

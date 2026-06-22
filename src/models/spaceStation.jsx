@@ -43,7 +43,7 @@ const markers = [
     position: [-0.5, 0.4, 1],
     lookAt: [-0.8, 0.3, 0.5],
     lookPosition: [-15, 5, 40],
-    label: "XR/Game",
+    label: "Game/XR",
   },
 ];
 
@@ -67,7 +67,7 @@ export function SpaceStation({
   const group = useRef();
 
   const { nodes, materials, animations } = useGLTF(
-    "https://pub-900982d21fee47f8b53d6e8c8ac9a4cf.r2.dev/spaceStation.glb"
+    "https://pub-900982d21fee47f8b53d6e8c8ac9a4cf.r2.dev/spaceStation.glb",
   );
   const { actions } = useAnimations(animations, group);
 
