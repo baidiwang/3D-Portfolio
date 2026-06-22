@@ -31,15 +31,12 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
           ×
         </button>
         <p className="font-mono sm:text-xl text-center">
-          Web & AI projects — from a voice-first AI assistant to full-stack
-          applications.
+          Web & AI projects — building AI interfaces and interactive prototypes,
+          from concept to shipped code.
           <br />
           <br />
           <span>
-            Built with{" "}
-            <strong>
-              TypeScript, React, Next.js, Tailwind, MUI, Framer Motion, Node.js
-            </strong>
+            Built with <strong>React, TypeScript, Next.js</strong>
           </span>
         </p>
         <Link
@@ -62,13 +59,12 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
           ×
         </button>
         <p className="font-mono text-center sm:text-xl">
-          Data visualization and interface design — turning complex data into
-          clear, considered visual stories.
+          Design work spanning UI/UX, data visualization, and interface design
+          — from Figma to shipped interfaces.
           <br />
           <br />
           <span>
-            Shaped at Axios and beyond, using{" "}
-            <strong>Figma, D3.js, Claude Code, Illustrator</strong>
+            Built with <strong>Figma, D3.js, Illustrator</strong>
           </span>
         </p>
         <Link
@@ -91,13 +87,12 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
           ×
         </button>
         <p className="font-mono text-center sm:text-xl">
-          XR and game development — two Unity/C# games including a
-          Steam-released title, plus mixed-reality experiences.
+          XR and game development — spatial computing, mixed reality, and
+          interactive games.
           <br />
           <br />
           <span>
-            Built with{" "}
-            <strong>Lens Studio, TypeScript, Unity, C#</strong>
+            Built with <strong>Unity, C#, Lens Studio</strong>
           </span>
         </p>
         <Link
