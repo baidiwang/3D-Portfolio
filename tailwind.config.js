@@ -19,14 +19,11 @@ export default {
         }
       },
       fontFamily: {
-        // Passage type system — mirrors CSS variables in index.css
+        // Unified type system — mirrors CSS variables in index.css
         display: ['"Space Grotesk"', "sans-serif"],
         body:    ['"Space Grotesk"', "sans-serif"],
-        mono:    ['"Space Mono"', "monospace"],
+        mono:    ['"Space Mono"', "monospace"],  // overrides Tailwind built-in font-mono
         accent:  ['"Bitcount Prop Double"', "serif"],
-        // Homepage fonts
-        worksans: ['"Work Sans"', "sans-serif"],
-        poppins:  ["Poppins", "sans-serif"],
       },
       boxShadow: {
         card: '0px 1px 2px 0px rgba(0, 0, 0, 0.05)'
