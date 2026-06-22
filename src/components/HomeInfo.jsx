@@ -31,12 +31,15 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
           ×
         </button>
         <p className="font-mono sm:text-xl text-center">
-          Web & AI projects — building AI interfaces and interactive prototypes,
-          from concept to shipped code.
+          AI & web projects, from concept to prototype to shipped code.
           <br />
           <br />
           <span>
-            Built with <strong>React, TypeScript, Next.js</strong>
+            Built with{" "}
+            <strong>
+              TypeScript, React, Next.js, Tailwind, Framer Motion
+            </strong>
+            , and more.
           </span>
         </p>
         <Link
@@ -59,12 +62,14 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
           ×
         </button>
         <p className="font-mono text-center sm:text-xl">
-          Design work spanning UI/UX, data visualization, and interface design
-          — from Figma to shipped interfaces.
+          Design work spanning UI/UX, data visualization, and interface design,
+          from Figma to shipped interfaces.
           <br />
           <br />
           <span>
-            Built with <strong>Figma, D3.js, Illustrator</strong>
+            Built with{" "}
+            <strong>Figma, D3.js, Illustrator, After Effects</strong>
+            , and more.
           </span>
         </p>
         <Link
@@ -87,12 +92,14 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
           ×
         </button>
         <p className="font-mono text-center sm:text-xl">
-          XR and game development — spatial computing, mixed reality, and
+          Game & XR work, from spatial computing to mixed reality and
           interactive games.
           <br />
           <br />
           <span>
-            Built with <strong>Unity, C#, Lens Studio</strong>
+            Built with{" "}
+            <strong>Unity, C#, TypeScript, Lens Studio, Blender</strong>
+            , and more.
           </span>
         </p>
         <Link
