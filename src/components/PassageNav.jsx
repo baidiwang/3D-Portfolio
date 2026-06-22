@@ -15,15 +15,18 @@ const STARS = (() => {
     return s / 0x7fffffff;
   };
   const out = [];
-  // Layer 0 — background: tiny, very faint
-  for (let i = 0; i < 72; i++)
-    out.push({ x: r() * 1440, y: r() * 900, r: 0.35 + r() * 0.5, op: 0.07 + r() * 0.14, tw: false });
-  // Layer 1 — midground: slightly brighter
-  for (let i = 0; i < 26; i++)
-    out.push({ x: r() * 1440, y: r() * 900, r: 0.65 + r() * 0.9, op: 0.18 + r() * 0.24, tw: false });
-  // Layer 2 — foreground: brightest, some twinkle
-  for (let i = 0; i < 10; i++)
-    out.push({ x: r() * 1440, y: r() * 900, r: 1.1 + r() * 1.4, op: 0.50 + r() * 0.45, tw: true });
+  // Layer 0 — deep background: dust-fine, barely visible
+  for (let i = 0; i < 180; i++)
+    out.push({ x: r() * 1440, y: r() * 900, r: 0.3 + r() * 0.5, op: 0.08 + r() * 0.18, tw: false });
+  // Layer 1 — midground: medium brightness
+  for (let i = 0; i < 60; i++)
+    out.push({ x: r() * 1440, y: r() * 900, r: 0.7 + r() * 1.0, op: 0.22 + r() * 0.28, tw: false });
+  // Layer 2 — foreground: brighter, all twinkle
+  for (let i = 0; i < 20; i++)
+    out.push({ x: r() * 1440, y: r() * 900, r: 1.2 + r() * 1.8, op: 0.55 + r() * 0.38, tw: true });
+  // Layer 3 — accent: a handful of very bright standout stars
+  for (let i = 0; i < 5; i++)
+    out.push({ x: r() * 1440, y: r() * 900, r: 2.4 + r() * 1.4, op: 0.75 + r() * 0.22, tw: true });
   return out;
 })();
 
@@ -60,18 +63,46 @@ function computeStopsXY(pts, stops) {
   });
 }
 
+// ── Easing / imperative DOM helpers (module-level, no hooks) ──────────────
+
+function spacecraftEase(t) {
+  // Cubic ease-in-out: gentle launch, smooth arrival
+  return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+}
+
+function domPlaceShip(ship, pts, frac) {
+  if (!ship || !pts.length) return;
+  const idx = Math.round(Math.max(0, Math.min(1, frac)) * (N - 1));
+  const p   = pts[idx];
+  ship.setAttribute("transform",
+    `translate(${p.x.toFixed(2)} ${p.y.toFixed(2)}) rotate(${p.a.toFixed(2)})`);
+}
+
+function domPlaceTrail(trail, pts, frac, dir) {
+  if (!trail || !pts.length) return;
+  const base = Math.round(Math.max(0, Math.min(1, frac)) * (N - 1));
+  const sign = dir >= 0 ? -1 : 1;           // dots trail behind travel direction
+  const offs = [5, 11, 20];
+  const dots = trail.children;
+  for (let i = 0; i < offs.length; i++) {
+    const idx = Math.max(0, Math.min(N - 1, base + sign * offs[i]));
+    dots[i].setAttribute("cx", pts[idx].x.toFixed(2));
+    dots[i].setAttribute("cy", pts[idx].y.toFixed(2));
+  }
+}
+
 // ── Component ───────────────────────────────────────────────────────────────
 
 export default function PassageNav({ category }) {
-  const svgRef  = useRef(null);
-  const pathRef = useRef(null);
-  const shipRef = useRef(null);
+  const svgRef   = useRef(null);
+  const pathRef  = useRef(null);
+  const shipRef  = useRef(null);
+  const trailRef = useRef(null);
 
-  // Animation state — all refs, zero re-renders per frame
   const samplesRef     = useRef([]);
   const curFracRef     = useRef(category.stops[0].frac);
-  const mouseFracRef   = useRef(category.stops[0].frac);
-  const lockFracRef    = useRef(null);
+  const currentStopRef = useRef(0);      // index of the stop the ship is parked at
+  const animatingRef   = useRef(false);  // true while flight animation is running
   const selectedRef    = useRef(null);
   const lastFocusRef   = useRef(null);
   const rafRef         = useRef(null);
@@ -80,157 +111,133 @@ export default function PassageNav({ category }) {
       window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
 
-  const [selected, setSelected] = useState(null);
-  const [stopsXY,  setStopsXY]  = useState([]);
+  const [selected,    setSelected]    = useState(null);
+  const [stopsXY,     setStopsXY]     = useState([]);
+  const [hoveredStop, setHoveredStop] = useState(null);
 
-  // Sample path + place ship before first paint
+  // Thin wrappers so handlers can call without passing refs explicitly
+  const placeShip  = (frac) => domPlaceShip(shipRef.current, samplesRef.current, frac);
+  const placeTrail = (frac, dir) => domPlaceTrail(trailRef.current, samplesRef.current, frac, dir);
+
+  // Sample path + park ship at stop 0 before first paint
   useLayoutEffect(() => {
     const pathEl = pathRef.current;
     if (!pathEl) return;
-
     const pts = samplePath(pathEl);
-    samplesRef.current = pts;
+    samplesRef.current     = pts;
     setStopsXY(computeStopsXY(pts, category.stops));
-
-    curFracRef.current   = category.stops[0].frac;
-    mouseFracRef.current = curFracRef.current;
-    lockFracRef.current  = null;
-
-    const ship = shipRef.current;
-    if (ship) {
-      const idx = Math.round(curFracRef.current * (N - 1));
-      const p   = pts[idx];
-      ship.setAttribute(
-        "transform",
-        `translate(${p.x.toFixed(2)} ${p.y.toFixed(2)}) rotate(${p.a.toFixed(2)})`
-      );
-    }
+    curFracRef.current     = category.stops[0].frac;
+    currentStopRef.current = 0;
+    placeShip(curFracRef.current);
   }, [category]);
 
-  // Reset selection on category switch
+  // Cancel any in-flight animation when category switches
   useEffect(() => {
     setSelected(null);
     selectedRef.current = null;
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
   }, [category]);
 
-  // Mouse/touch tracking + RAF loop — interaction unchanged
-  useEffect(() => {
-    const svg  = svgRef.current;
-    const ship = shipRef.current;
-    if (!svg || !ship) return;
-
-    const toSVGPoint = (clientX, clientY) => {
-      const ctm = svg.getScreenCTM();
-      if (!ctm) return null;
-      const pt = svg.createSVGPoint();
-      pt.x = clientX;
-      pt.y = clientY;
-      return pt.matrixTransform(ctm.inverse());
-    };
-
-    const nearestFrac = ({ x, y }) => {
-      const pts = samplesRef.current;
-      if (!pts.length) return 0;
-      let best = 0, bd = Infinity;
-      for (let i = 0; i < pts.length; i++) {
-        const dx = pts[i].x - x, dy = pts[i].y - y;
-        const d  = dx * dx + dy * dy;
-        if (d < bd) { bd = d; best = i; }
-      }
-      return pts[best].frac;
-    };
-
-    const handleMouseMove = (e) => {
-      const sp = toSVGPoint(e.clientX, e.clientY);
-      if (!sp) return;
-      mouseFracRef.current = nearestFrac(sp);
-      lockFracRef.current  = null;
-    };
-
-    const handleTouchMove = (e) => {
-      if (!e.touches.length) return;
-      const sp = toSVGPoint(e.touches[0].clientX, e.touches[0].clientY);
-      if (!sp) return;
-      mouseFracRef.current = nearestFrac(sp);
-      lockFracRef.current  = null;
-    };
-
-    const placeShip = (frac) => {
-      const pts = samplesRef.current;
-      if (!pts.length) return;
-      const idx = Math.round(Math.max(0, Math.min(1, frac)) * (pts.length - 1));
-      const p   = pts[idx];
-      ship.setAttribute(
-        "transform",
-        `translate(${p.x.toFixed(2)} ${p.y.toFixed(2)}) rotate(${p.a.toFixed(2)})`
-      );
-    };
-
-    const LERP  = reducedMotion.current ? 1 : 0.14;
-    const stops = category.stops;
-
-    const loop = () => {
-      const target = lockFracRef.current != null ? lockFracRef.current : mouseFracRef.current;
-      curFracRef.current += (target - curFracRef.current) * LERP;
-      placeShip(curFracRef.current);
-
-      if (lockFracRef.current != null &&
-          Math.abs(curFracRef.current - lockFracRef.current) < 0.004)
-        lockFracRef.current = null;
-
-      let nearIdx = null, nearDist = 1;
-      for (let i = 0; i < stops.length; i++) {
-        const d = Math.abs(curFracRef.current - stops[i].frac);
-        if (d < nearDist) { nearDist = d; nearIdx = i; }
-      }
-
-      if (nearDist < 0.028 && selectedRef.current !== nearIdx) {
-        selectedRef.current = nearIdx;
-        setSelected(nearIdx);
-      } else if (nearDist > 0.06 && lockFracRef.current == null && selectedRef.current !== null) {
-        selectedRef.current = null;
-        setSelected(null);
-      }
-
-      rafRef.current = requestAnimationFrame(loop);
-    };
-
-    rafRef.current = requestAnimationFrame(loop);
-    window.addEventListener("mousemove",  handleMouseMove);
-    window.addEventListener("touchmove",  handleTouchMove, { passive: true });
-
-    return () => {
-      cancelAnimationFrame(rafRef.current);
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("touchmove", handleTouchMove);
-    };
-  }, [category]);
-
-  // Escape closes panel
-  useEffect(() => {
-    const onKeyDown = (e) => {
-      if (e.key === "Escape" && selectedRef.current !== null) {
-        lastFocusRef.current?.focus();
-        selectedRef.current = null;
-        setSelected(null);
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
-
-  const handleSelect = useCallback((i) => {
-    lastFocusRef.current      = document.activeElement;
-    lockFracRef.current       = category.stops[i].frac;
-    selectedRef.current       = i;
-    setSelected(i);
-  }, [category]);
+  // ── Handlers ────────────────────────────────────────────────────────────────
 
   const handleClose = useCallback(() => {
     lastFocusRef.current?.focus();
     selectedRef.current = null;
     setSelected(null);
   }, []);
+
+  const animateToStop = useCallback((stopIdx) => {
+    // Cancel any in-progress flight cleanly — ship stays at current position
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current       = null;
+    animatingRef.current = false;
+
+    const target = category.stops[stopIdx].frac;
+    const start  = curFracRef.current;
+    const delta  = target - start;
+
+    // Already parked here — just open the panel
+    if (Math.abs(delta) < 0.001) {
+      currentStopRef.current = stopIdx;
+      selectedRef.current    = stopIdx;
+      if (trailRef.current) trailRef.current.setAttribute("opacity", "0");
+      setSelected(stopIdx);
+      return;
+    }
+
+    animatingRef.current = true;
+    if (trailRef.current) trailRef.current.setAttribute("opacity", "1");
+
+    // Max ~1 s for any flight; scales down for short hops
+    const duration = reducedMotion.current
+      ? 0
+      : Math.max(300, Math.min(1000, Math.abs(delta) * 1600));
+
+    if (duration === 0) {
+      curFracRef.current     = target;
+      currentStopRef.current = stopIdx;
+      animatingRef.current   = false;
+      placeShip(target);
+      if (trailRef.current) trailRef.current.setAttribute("opacity", "0");
+      selectedRef.current = stopIdx;
+      setSelected(stopIdx);
+      return;
+    }
+
+    const startTime = performance.now();
+    const frame = (now) => {
+      const t    = Math.min(1, (now - startTime) / duration);
+      const frac = start + delta * spacecraftEase(t);
+      curFracRef.current = frac;
+      placeShip(frac);
+      placeTrail(frac, delta);
+
+      if (t < 1) {
+        rafRef.current = requestAnimationFrame(frame);
+      } else {
+        curFracRef.current     = target;
+        animatingRef.current   = false;
+        currentStopRef.current = stopIdx;
+        placeShip(target);
+        if (trailRef.current) trailRef.current.setAttribute("opacity", "0");
+        selectedRef.current = stopIdx;
+        setSelected(stopIdx);
+      }
+    };
+    rafRef.current = requestAnimationFrame(frame);
+  }, [category]);
+
+  const handleSelect = useCallback((i) => {
+    lastFocusRef.current = document.activeElement;
+    // Toggle: clicking the open stop closes the panel
+    if (selectedRef.current === i) { handleClose(); return; }
+    // Close any open panel, then fly to the new stop
+    selectedRef.current = null;
+    setSelected(null);
+    animateToStop(i);
+  }, [animateToStop, handleClose]);
+
+  // ── Keyboard navigation ─────────────────────────────────────────────────────
+  useEffect(() => {
+    const n = category.stops.length;
+    const onKeyDown = (e) => {
+      if (e.key === "Escape" && selectedRef.current !== null) {
+        lastFocusRef.current?.focus();
+        selectedRef.current = null;
+        setSelected(null);
+        return;
+      }
+      if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+        e.preventDefault();
+        handleSelect((currentStopRef.current + 1) % n);
+      } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+        e.preventDefault();
+        handleSelect((currentStopRef.current - 1 + n) % n);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [category, handleSelect]);
 
   const selStop = selected != null ? category.stops[selected] : null;
 
@@ -255,11 +262,18 @@ export default function PassageNav({ category }) {
             </feMerge>
           </filter>
 
-          {/* Orbital trail glow */}
-          <filter id="pathGlow" x="-40%" y="-40%" width="180%" height="180%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
+          {/* Exhaust trail glow */}
+          <filter id="trailGlow" x="-80%" y="-80%" width="260%" height="260%">
+            <feGaussianBlur stdDeviation="4" />
+          </filter>
+
+          {/* Orbital trail glow — wide bloom + tight halo + bare line */}
+          <filter id="pathGlow" x="-120%" y="-120%" width="340%" height="340%">
+            <feGaussianBlur stdDeviation="9" result="bloom" />
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="halo" />
             <feMerge>
-              <feMergeNode in="blur" />
+              <feMergeNode in="bloom" />
+              <feMergeNode in="halo" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
@@ -283,6 +297,15 @@ export default function PassageNav({ category }) {
             <stop offset="35%"  stopColor={BG} stopOpacity="0"    />
             <stop offset="100%" stopColor={BG} stopOpacity="0.65" />
           </radialGradient>
+
+          {/* Marker glow — soft bloom around stop rings */}
+          <filter id="markerGlow" x="-120%" y="-120%" width="340%" height="340%">
+            <feGaussianBlur stdDeviation="5" result="glow" />
+            <feMerge>
+              <feMergeNode in="glow" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
         </defs>
 
         {/* Nebula blobs — rendered first so everything else sits on top */}
@@ -305,31 +328,27 @@ export default function PassageNav({ category }) {
           />
         ))}
 
-        {/* Orbital trajectory — glow aura behind, dashed core on top */}
-        <path
-          d={PATH_D}
-          fill="none"
-          stroke="rgba(160,200,255,0.07)"
-          strokeWidth="18"
-          strokeLinecap="round"
-        />
+        {/* Orbital trajectory — single luminous line, no road fill */}
         <path
           ref={pathRef}
           d={PATH_D}
           fill="none"
-          stroke={CREAM}
-          strokeWidth="1.3"
-          strokeDasharray="4 13"
+          stroke="rgba(195,220,255,0.72)"
+          strokeWidth="1.1"
           strokeLinecap="round"
-          opacity="0.42"
           filter="url(#pathGlow)"
         />
 
         {/* Stop markers */}
         {category.stops.map((stop, i) => {
-          const xy     = stopsXY[i];
+          const xy      = stopsXY[i];
           if (!xy) return null;
-          const active = selected === i;
+          const active  = selected === i;
+          const hovered = hoveredStop === i;
+          const labelDx = xy.anchor === "start" ? 36 : -36;
+          const outerDur = active ? "4s"   : "6s";
+          const innerDur = active ? "2.7s" : "4s";
+
           return (
             <g
               key={stop.id}
@@ -337,7 +356,11 @@ export default function PassageNav({ category }) {
               tabIndex={0}
               aria-label={`Stop ${i + 1}: ${stop.title}`}
               aria-pressed={active}
+              transform={`translate(${xy.x} ${xy.y})`}
+              style={{ cursor: "pointer", outline: "none" }}
               onClick={() => handleSelect(i)}
+              onMouseEnter={() => setHoveredStop(i)}
+              onMouseLeave={() => setHoveredStop(null)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
@@ -345,30 +368,82 @@ export default function PassageNav({ category }) {
                 }
               }}
             >
+              {/* Hit target */}
+              <circle cx="0" cy="0" r="30" fill="white" opacity="0" />
+
+              {/* Keyboard-only focus ring (CSS :focus-visible drives opacity) */}
               <circle
-                cx={xy.x} cy={xy.y} r="22"
-                fill={BG} stroke={CREAM} strokeWidth="1.3"
-                opacity={active ? 0.95 : 0.4}
+                className="marker-kbd-ring"
+                cx="0" cy="0" r="26"
+                fill="none"
+                stroke="rgba(195,220,255,0.75)"
+                strokeWidth="1.5"
+                strokeDasharray="5 3"
+                style={{ opacity: 0, transition: "opacity 0.18s", pointerEvents: "none" }}
               />
-              <circle
-                cx={xy.x} cy={xy.y} r="4.5"
-                fill={CREAM}
-                opacity={active ? 1 : 0.55}
-                style={active ? { animation: "scBreathe 2.4s ease-in-out infinite" } : undefined}
-              />
+
+              {/* Rings + dot in a scaling group for hover feedback */}
+              <g
+                filter="url(#markerGlow)"
+                style={{
+                  transform: (active || hovered) ? "scale(1.15)" : "scale(1)",
+                  transition: "transform 0.22s ease",
+                  transformBox: "fill-box",
+                  transformOrigin: "center",
+                }}
+              >
+                {/* Outer arc — slow clockwise */}
+                <circle
+                  cx="0" cy="0" r="20"
+                  fill="none" stroke={CREAM} strokeWidth="1.2"
+                  strokeDasharray="94 32"
+                  style={{
+                    transformBox: "fill-box",
+                    transformOrigin: "center",
+                    animation: `svgSpin ${outerDur} linear infinite`,
+                    opacity: active ? 0.88 : hovered ? 0.68 : 0.48,
+                    transition: "opacity 0.4s",
+                  }}
+                />
+                {/* Inner arc — counter-clockwise */}
+                <circle
+                  cx="0" cy="0" r="13"
+                  fill="none" stroke={CREAM} strokeWidth="1.0"
+                  strokeDasharray="54 28"
+                  style={{
+                    transformBox: "fill-box",
+                    transformOrigin: "center",
+                    animation: `svgSpinR ${innerDur} linear infinite`,
+                    opacity: active ? 0.75 : hovered ? 0.55 : 0.38,
+                    transition: "opacity 0.4s",
+                  }}
+                />
+                {/* Center dot — pulses when active */}
+                <circle
+                  cx="0" cy="0" r="3.5"
+                  fill={CREAM}
+                  style={{
+                    opacity: active ? 0.95 : hovered ? 0.72 : 0.52,
+                    transition: "opacity 0.4s",
+                    ...(active ? { animation: "scBreathe 2.4s ease-in-out infinite" } : {}),
+                  }}
+                />
+              </g>
+
+              {/* Labels — outside scale group so text size is stable */}
               <text
-                x={xy.labelX} y={xy.y}
+                x={labelDx} y="0"
                 textAnchor={xy.anchor} dominantBaseline="middle"
-                fill={CREAM} fillOpacity={active ? 0.85 : 0.4}
-                style={{ fontSize: "13px", letterSpacing: "0.12em" }}
+                fill={CREAM} fillOpacity={active ? 0.85 : hovered ? 0.65 : 0.4}
+                style={{ fontFamily: "var(--font-mono)", fontSize: "12px", letterSpacing: "0.12em", transition: "fill-opacity 0.4s" }}
               >
                 {String(i + 1).padStart(2, "0")}
               </text>
               <text
-                x={xy.labelX} y={xy.nameY}
+                x={labelDx} y={26}
                 textAnchor={xy.anchor} dominantBaseline="middle"
-                fill={CREAM} fillOpacity={active ? 1 : 0.55}
-                style={{ fontSize: "21px", fontStyle: "italic", fontWeight: "300" }}
+                fill={CREAM} fillOpacity={active ? 1 : hovered ? 0.94 : 0.82}
+                style={{ fontFamily: "var(--font-display)", fontSize: "20px", fontWeight: "300", transition: "fill-opacity 0.4s" }}
               >
                 {stop.title}
               </text>
@@ -376,14 +451,21 @@ export default function PassageNav({ category }) {
           );
         })}
 
-        {/* Spacecraft — placed by RAF, never by React */}
-        <g ref={shipRef} style={{ pointerEvents: "none" }} filter="url(#scGlow)">
-          <path d="M 13 0 L -9 -7.5 L -3.5 0 L -9 7.5 Z" fill={CREAM} />
-          <circle cx="-1" cy="0" r="1.4" fill={BG} />
+        {/* Exhaust trail — shown during animation, hidden at rest */}
+        <g ref={trailRef} opacity="0" filter="url(#trailGlow)" style={{ pointerEvents: "none" }}>
+          <circle r="3.2" fill={CREAM} opacity="0.5" />
+          <circle r="2.0" fill={CREAM} opacity="0.3" />
+          <circle r="1.1" fill={CREAM} opacity="0.15" />
         </g>
 
-        {/* Vignette overlay — rendered last to darken edges */}
-        <rect x="0" y="0" width="1440" height="900" fill="url(#vignette)" />
+        {/* Spacecraft — positioned imperatively by animation RAF */}
+        <g ref={shipRef} style={{ pointerEvents: "none" }} filter="url(#scGlow)">
+          <path d="M 18 0 L -13 -10.5 L -5 0 L -13 10.5 Z" fill={CREAM} />
+          <circle cx="-1.5" cy="0" r="2" fill={BG} />
+        </g>
+
+        {/* Vignette overlay — pointer-events:none so it doesn't block marker clicks */}
+        <rect x="0" y="0" width="1440" height="900" fill="url(#vignette)" style={{ pointerEvents: "none" }} />
       </svg>
 
       {/* ── Masthead ── */}
@@ -391,6 +473,9 @@ export default function PassageNav({ category }) {
         <Link to="/" style={backLinkStyle}>Baidi Wang</Link>
         <div style={categoryLabelStyle}>{category.label}</div>
         <div style={introStyle}>{category.intro}</div>
+        <div style={mastheadHintStyle} aria-hidden="true">
+          Pilot the craft — click or ↑↓
+        </div>
       </div>
 
       {/* ── Direct-access list (primary accessible interface) ── */}
@@ -405,12 +490,12 @@ export default function PassageNav({ category }) {
               style={listBtnStyle}
               aria-current={active ? "true" : undefined}
             >
-              <span style={{ ...listNumStyle, color: active ? "rgba(242,239,233,0.95)" : "rgba(242,239,233,0.4)" }}>
+              <span style={{ ...listNumStyle, color: active ? "rgba(242,239,233,0.95)" : "rgba(242,239,233,0.55)" }}>
                 {String(i + 1).padStart(2, "0")}
               </span>
               <span style={{
                 ...listNameStyle,
-                color: active ? CREAM : "rgba(242,239,233,0.7)",
+                color: active ? CREAM : "rgba(242,239,233,0.90)",
                 borderBottomColor: active ? "rgba(242,239,233,0.7)" : "transparent",
               }}>
                 {stop.title}
@@ -420,10 +505,6 @@ export default function PassageNav({ category }) {
         })}
       </nav>
 
-      {/* ── Corner hint ── */}
-      <div style={hintStyle} aria-hidden="true">
-        Move to pilot · stop to arrive
-      </div>
 
       {/* ── Detail panel ── */}
       {selStop && (
@@ -489,7 +570,7 @@ const sceneStyle = {
   height: "100vh",
   overflow: "hidden",
   background: BG,
-  fontFamily: "'Newsreader', Georgia, serif",
+  fontFamily: "var(--font-display)",
   color: CREAM,
 };
 
@@ -506,35 +587,47 @@ const mastheadStyle = {
   top: "42px",
   left: "48px",
   zIndex: 10,
-  maxWidth: "300px",
+  maxWidth: "340px",
   pointerEvents: "auto",
 };
 
 const backLinkStyle = {
   display: "block",
-  fontSize: "30px",
-  fontStyle: "italic",
-  fontWeight: "300",
-  letterSpacing: "0.01em",
+  fontFamily: "var(--font-accent)",
+  fontSize: "44px",
+  fontWeight: "400",
+  letterSpacing: "0.04em",
   lineHeight: 1,
   color: CREAM,
   textDecoration: "none",
 };
 
 const categoryLabelStyle = {
-  marginTop: "12px",
-  fontSize: "11px",
+  marginTop: "14px",
+  fontFamily: "var(--font-mono)",
+  fontSize: "12px",
   letterSpacing: "0.32em",
   textTransform: "uppercase",
-  color: "rgba(242,239,233,0.5)",
+  color: "rgba(242,239,233,0.72)",
 };
 
 const introStyle = {
-  marginTop: "20px",
+  marginTop: "18px",
   fontSize: "14px",
-  lineHeight: "1.55",
+  lineHeight: "1.6",
   fontWeight: "300",
-  color: "rgba(242,239,233,0.62)",
+  color: "rgba(242,239,233,0.75)",
+};
+
+const mastheadHintStyle = {
+  marginTop: "16px",
+  fontFamily: "var(--font-mono)",
+  fontSize: "10px",
+  letterSpacing: "0.18em",
+  textTransform: "uppercase",
+  color: "rgba(242,239,233,0.58)",
+  whiteSpace: "nowrap",
+  pointerEvents: "none",
 };
 
 const listNavStyle = {
@@ -548,25 +641,28 @@ const listNavStyle = {
 };
 
 const listHeadingStyle = {
+  fontFamily: "var(--font-mono)",
   fontSize: "10px",
   letterSpacing: "0.34em",
   textTransform: "uppercase",
-  color: "rgba(242,239,233,0.4)",
-  marginBottom: "12px",
+  color: "rgba(242,239,233,0.6)",
+  marginBottom: "14px",
 };
 
 const listBtnStyle = {
   background: "none",
   border: "none",
-  padding: "5px 0",
+  padding: "6px 0",
   display: "flex",
   alignItems: "baseline",
   gap: "14px",
   textAlign: "left",
-  fontFamily: "'Newsreader', Georgia, serif",
+  fontFamily: "var(--font-display)",
+  cursor: "pointer",
 };
 
 const listNumStyle = {
+  fontFamily: "var(--font-mono)",
   fontSize: "11px",
   letterSpacing: "0.12em",
   minWidth: "20px",
@@ -574,33 +670,21 @@ const listNumStyle = {
 };
 
 const listNameStyle = {
-  fontSize: "17px",
-  fontStyle: "italic",
-  fontWeight: "300",
+  fontSize: "19px",
+  fontWeight: "400",
   transition: "color 0.4s",
   borderBottom: "1px solid transparent",
   paddingBottom: "1px",
 };
 
-const hintStyle = {
-  position: "absolute",
-  top: "46px",
-  right: "48px",
-  zIndex: 10,
-  fontSize: "10px",
-  letterSpacing: "0.3em",
-  textTransform: "uppercase",
-  color: "rgba(242,239,233,0.35)",
-  animation: "scBreathe 4s ease-in-out infinite",
-  pointerEvents: "none",
-};
 
 const panelStyle = {
   position: "absolute",
   top: 0,
   right: 0,
   height: "100vh",
-  width: "392px",
+  width: "52vw",
+  minWidth: "420px",
   maxWidth: "100%",
   zIndex: 20,
   background: "rgba(5,5,5,0.82)",
@@ -610,7 +694,7 @@ const panelStyle = {
   display: "flex",
   flexDirection: "column",
   justifyContent: "center",
-  padding: "0 46px",
+  padding: "0 68px",
   overflowY: "auto",
 };
 
@@ -620,11 +704,12 @@ const closeBtnStyle = {
   right: "40px",
   background: "none",
   border: "none",
-  fontSize: "13px",
+  fontFamily: "var(--font-mono)",
+  fontSize: "11px",
   letterSpacing: "0.2em",
   textTransform: "uppercase",
   color: "rgba(242,239,233,0.5)",
-  fontFamily: "'Newsreader', Georgia, serif",
+  cursor: "pointer",
 };
 
 const thumbImgStyle = {
@@ -647,6 +732,7 @@ const thumbPlaceholderStyle = {
 };
 
 const thumbLabelStyle = {
+  fontFamily: "var(--font-mono)",
   fontSize: "10px",
   letterSpacing: "0.3em",
   textTransform: "uppercase",
@@ -654,6 +740,7 @@ const thumbLabelStyle = {
 };
 
 const stopNumStyle = {
+  fontFamily: "var(--font-mono)",
   fontSize: "11px",
   letterSpacing: "0.34em",
   textTransform: "uppercase",
@@ -668,15 +755,16 @@ const dividerStyle = {
 };
 
 const titleStyle = {
-  fontSize: "46px",
-  fontStyle: "italic",
+  fontSize: "44px",
   fontWeight: "300",
-  lineHeight: "1.02",
+  lineHeight: "1.05",
+  letterSpacing: "-0.01em",
 };
 
 const catStyle = {
   marginTop: "10px",
-  fontSize: "12px",
+  fontFamily: "var(--font-mono)",
+  fontSize: "11px",
   letterSpacing: "0.26em",
   textTransform: "uppercase",
   color: "rgba(242,239,233,0.55)",
@@ -698,8 +786,9 @@ const tagsRowStyle = {
 };
 
 const tagStyle = {
+  fontFamily: "var(--font-mono)",
   fontSize: "10px",
-  letterSpacing: "0.22em",
+  letterSpacing: "0.18em",
   textTransform: "uppercase",
   color: "rgba(242,239,233,0.55)",
   border: "1px solid rgba(242,239,233,0.18)",
@@ -718,8 +807,9 @@ const linkStyle = {
   display: "inline-flex",
   alignItems: "center",
   gap: "6px",
-  fontSize: "12px",
-  letterSpacing: "0.2em",
+  fontFamily: "var(--font-mono)",
+  fontSize: "11px",
+  letterSpacing: "0.18em",
   textTransform: "uppercase",
   color: CREAM,
   textDecoration: "none",

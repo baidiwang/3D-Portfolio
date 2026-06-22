@@ -1,8 +1,16 @@
-@import url("https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,200..500;1,200..500&family=Poppins:wght@100;200;300;400;500;600;700;800;900&family=Work+Sans:wght@100;200;300;400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Bitcount+Prop+Double&family=Poppins:wght@100;200;300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Work+Sans:wght@100;200;300;400;500;600;700;800;900&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ── Type system ─────────────────────────────────────────────────────────── */
+:root {
+  --font-display: "Space Grotesk", sans-serif;
+  --font-body:    "Space Grotesk", sans-serif;
+  --font-mono:    "Space Mono", monospace;
+  --font-accent:  "Bitcount Prop Double", serif;
+}
 
 body {
   font-family: "Work Sans", sans-serif;
@@ -37,14 +45,20 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
+/* Suppress focus outline on mouse/touch — only show for keyboard nav */
+:focus:not(:focus-visible) { outline: none; }
+
+/* On-brand keyboard focus ring for SVG interactive elements */
+g[role="button"]:focus-visible .marker-kbd-ring { opacity: 1 !important; }
+
 /* Passage nav */
-.passage-scene {
-  cursor: none;
+@keyframes svgSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
-@media (hover: none), (pointer: coarse) {
-  .passage-scene {
-    cursor: auto;
-  }
+@keyframes svgSpinR {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(-360deg); }
 }
 @keyframes scPanel {
   from { opacity: 0; transform: translateX(26px); }
