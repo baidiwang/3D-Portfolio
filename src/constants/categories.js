@@ -85,7 +85,7 @@ export const categories = {
         oneLineDescription:
           "Designing a voice-first interface that makes the AI's state legible — showing live transcription and captured tasks so users can see the AI working in real time.",
         tags: ["Voice UI", "Interaction Design", "Figma", "Real-time UX"],
-        thumbnail: "/thumbnails/lily.png",
+        thumbnail: "/thumbnails/lily.gif",
         links: [{ label: "Live", url: "https://voice-first-chat.vercel.app/" }],
         frac: 0.15,
       },
