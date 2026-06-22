@@ -131,7 +131,7 @@ export const categories = {
   },
 
   xr: {
-    slug: "game/xr",
+    slug: "xr",
     label: "Game/XR",
     intro:
       "Guide the craft along the passage. Each stop is a project — or jump directly from the list.",
