@@ -9,6 +9,23 @@ export const categories = {
       "Guide the craft along the passage. Each stop is a project — or jump directly from the list.",
     stops: [
       {
+        id: "web-trustpath",
+        title: "TrustPath",
+        category: "AI Interface",
+        oneLineDescription:
+          "A renter-controlled document copilot that shows its evidence — every extracted field comes with source quotes and confidence, and stays fully editable by the user.",
+        tags: ["OpenAI API", "Serverless", "JavaScript", "AI Guardrails"],
+        thumbnail: null,
+        links: [
+          { label: "Live", url: "https://trust-path-copilot.vercel.app/" },
+          {
+            label: "GitHub",
+            url: "https://github.com/baidiwang/TrustPath",
+          },
+        ],
+        frac: 0.12,
+      },
+      {
         id: "web-1",
         title: "Lily",
         category: "AI Voice Assistant",
@@ -23,7 +40,7 @@ export const categories = {
             url: "https://github.com/baidiwang/voice-first-chat",
           },
         ],
-        frac: 0.15,
+        frac: 0.38,
       },
       {
         id: "web-2",
@@ -39,7 +56,7 @@ export const categories = {
             url: "https://medium.com/@WangPortfolio/web-and-mobile-projects-5922cfb86b60?postPublishedType=repub",
           },
         ],
-        frac: 0.5,
+        frac: 0.62,
       },
       {
         id: "web-3",
@@ -56,7 +73,7 @@ export const categories = {
             url: "https://www.figma.com/design/b6RUVO5GreNBg2Hou5MoHy/VISA-assessment-design",
           },
         ],
-        frac: 0.85,
+        frac: 0.88,
       },
       // 新项目 — 下周做完再启用
       // {
