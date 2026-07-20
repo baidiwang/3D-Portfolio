@@ -4,12 +4,13 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Type system ─────────────────────────────────────────────────────────── */
+/* ── Design tokens ───────────────────────────────────────────────────────── */
 :root {
-  --font-display: "Space Grotesk", sans-serif;
-  --font-body:    "Space Grotesk", sans-serif;
-  --font-mono:    "Space Mono", monospace;
-  --font-accent:  "Bitcount Prop Double", serif;
+  --font-display:  "Space Grotesk", sans-serif;
+  --font-body:     "Space Grotesk", sans-serif;
+  --font-mono:     "Space Mono", monospace;
+  --font-accent:   "Bitcount Prop Double", serif;
+  --color-accent:  #FF6B35;
 }
 
 body {
@@ -50,6 +51,12 @@ body {
 
 /* On-brand keyboard focus ring for SVG interactive elements */
 g[role="button"]:focus-visible .marker-kbd-ring { opacity: 1 !important; }
+
+/* Typewriter cursor — accent color */
+.blinking-cursor, .cursor { color: var(--color-accent) !important; }
+
+/* Passage card link hover — accent */
+.passage-link:hover { color: var(--color-accent); border-bottom-color: var(--color-accent); }
 
 /* Passage nav */
 @keyframes svgSpin {
