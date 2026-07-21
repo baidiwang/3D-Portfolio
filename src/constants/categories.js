@@ -15,7 +15,7 @@ export const categories = {
         oneLineDescription:
           "A renter-controlled document copilot that shows its evidence — every extracted field comes with source quotes and confidence, and stays fully editable by the user.",
         tags: ["OpenAI API", "Serverless", "JavaScript", "AI Guardrails"],
-        thumbnail: null,
+        thumbnail: "/thumbnails/trustPath.gif",
         links: [
           { label: "Live", url: "https://trust-path-copilot.vercel.app/" },
           {
