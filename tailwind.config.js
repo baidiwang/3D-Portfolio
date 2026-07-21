@@ -17,7 +17,7 @@ export default {
         blue: {
           500: "#2b77e7"
         },
-        accent: "#FF6B35",
+        accent: "#D4C763",
       },
       fontFamily: {
         // Unified type system — mirrors CSS variables in index.css

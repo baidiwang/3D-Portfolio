@@ -6,7 +6,7 @@ import { PATH_D } from "../constants/categories";
 const N            = 600;
 const CREAM        = "#f2efe9";
 const BG           = "#050505";
-const ACCENT       = "#FF6B35";
+const ACCENT       = "#D4C763";
 const APPROACH_DIST = 0.12; // card starts appearing (dim)
 const ARRIVE_DIST   = 0.04; // card fully lit + accent state
 const TRAIL_LEN    = 8;
