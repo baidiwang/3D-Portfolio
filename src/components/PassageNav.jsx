@@ -226,7 +226,7 @@ export default function PassageNav({ category }) {
     card.style.filter        = arrived ? "brightness(1) saturate(1)" :
       `brightness(${(0.3 + 0.7 * t).toFixed(2)}) saturate(0.7)`;
     card.style.boxShadow     = arrived
-      ? `0 0 0 1px rgba(255,107,53,0.45), 0 20px 60px rgba(0,0,0,0.7), 0 0 50px rgba(255,107,53,0.14)`
+      ? `0 0 0 1px rgba(212,199,99,0.45), 0 20px 60px rgba(0,0,0,0.7), 0 0 50px rgba(212,199,99,0.14)`
       : "0 20px 60px rgba(0,0,0,0.55)";
     card.style.pointerEvents = arrived ? "auto" : "none";
 
@@ -703,7 +703,7 @@ export default function PassageNav({ category }) {
               <path d="M -6.5 0 A 6.5 5.5 0 0 1 6.5 0"
                 fill="none" stroke={CREAM} strokeWidth="0.65" />
 
-              {/* ── Rim lights: orange accents on lower rim arc ── */}
+              {/* ── Rim lights: accent glow on lower rim arc ── */}
               <circle cx="-9"  cy="3.9" r="0.65" fill={ACCENT} opacity="0.92" filter="url(#rimGlow)" />
               <circle cx="0"   cy="4.4" r="0.65" fill={ACCENT} opacity="0.92" filter="url(#rimGlow)" />
               <circle cx="9"   cy="3.9" r="0.65" fill={ACCENT} opacity="0.92" filter="url(#rimGlow)" />
@@ -734,7 +734,7 @@ export default function PassageNav({ category }) {
           <div style={introStyle}>{category.intro}</div>
         </div>
 
-        {/* Scroll hint: bottom-center, accent orange, fades after stop 1 */}
+        {/* Scroll hint: bottom-center, accent color, fades after stop 1 */}
         <div
           ref={hintRef}
           aria-hidden="true"
