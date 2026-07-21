@@ -60,10 +60,12 @@ function domPlaceShip(ship, pts, frac) {
   if (!ship || !pts.length) return;
   const idx = Math.round(Math.max(0, Math.min(1, frac)) * (N - 1));
   const p   = pts[idx];
-  ship.setAttribute(
-    "transform",
-    `translate(${p.x.toFixed(2)} ${p.y.toFixed(2)}) rotate(${p.a.toFixed(2)})`
-  );
+  // UFO: position only — no tangent rotation (saucer is radially symmetric)
+  ship.setAttribute("transform", `translate(${p.x.toFixed(2)} ${p.y.toFixed(2)})`);
+}
+
+function driftEase(t) {
+  return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -85,7 +87,14 @@ export default function PassageNav({ category }) {
   const curFracRef    = useRef(0);
   const selectedRef   = useRef(null);
   const prevFracRef   = useRef(0);
-  const rafPending    = useRef(false);
+  const rafPending      = useRef(false);
+  const introPlayingRef = useRef(false);
+  const introRafRef     = useRef(null);
+  const saucerBankRef   = useRef(null);   // inner SVG <g> for banking tilt
+  const saucerWobbleRef = useRef(null);   // innermost <g> for idle hover wobble
+  const bankRef         = useRef(0);      // current bank angle (degrees)
+  const prevAngleRef    = useRef(0);      // previous path tangent angle for dAngle calc
+  const hintRef         = useRef(null);   // bottom-center scroll hint
   const trailPosRef   = useRef([]);
   const camRef        = useRef({ w: CAM_W_SVG, h: 300 }); // h updated on mount
   const reducedMotion = useRef(
@@ -96,6 +105,7 @@ export default function PassageNav({ category }) {
   const [selected,    setSelected]    = useState(null);
   const [stopsXY,     setStopsXY]     = useState([]);
   const [hoveredStop, setHoveredStop] = useState(null);
+  const [listOpen,    setListOpen]    = useState(false);
 
   // ── Imperative helpers (called from RAF, no React deps) ───────────────────
 
@@ -230,6 +240,24 @@ export default function PassageNav({ category }) {
   }, [category]);
 
   // ── scrollToStop ──────────────────────────────────────────────────────────
+  // Banking tilt + idle wobble — called every RAF frame
+  const applyShipDynamics = useCallback((p, speed) => {
+    // Compute angular velocity for banking
+    let dAngle = p.a - prevAngleRef.current;
+    if (dAngle > 180)  dAngle -= 360;
+    if (dAngle < -180) dAngle += 360;
+    prevAngleRef.current = p.a;
+    const targetBank   = Math.max(-15, Math.min(15, dAngle * 2.4));
+    bankRef.current    = bankRef.current * 0.84 + targetBank * 0.16;
+    if (saucerBankRef.current) {
+      saucerBankRef.current.setAttribute("transform", `rotate(${bankRef.current.toFixed(2)})`);
+    }
+    // Wobble: resume when parked, pause when moving
+    if (saucerWobbleRef.current) {
+      saucerWobbleRef.current.style.animationPlayState = speed > 0.0005 ? "paused" : "running";
+    }
+  }, []);
+
   const scrollToStop = useCallback((stopIdx) => {
     const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
     if (maxScroll <= 0) return;
@@ -244,6 +272,13 @@ export default function PassageNav({ category }) {
     const pathEl = pathRef.current;
     if (!pathEl) return;
 
+    // Cancel any in-progress intro from the previous category
+    if (introRafRef.current) {
+      cancelAnimationFrame(introRafRef.current);
+      introRafRef.current = null;
+    }
+    introPlayingRef.current = false;
+
     const pts = samplePath(pathEl);
     samplesRef.current = pts;
 
@@ -255,56 +290,98 @@ export default function PassageNav({ category }) {
     setStopsXY(xy);
 
     setSelected(null);
-    selectedRef.current = null;
-    trailPosRef.current = [];
+    selectedRef.current  = null;
+    trailPosRef.current  = [];
+    bankRef.current      = 0;
 
-    // Boot at first stop
     const firstFrac = category.stops[0].frac;
-    curFracRef.current  = firstFrac;
-    prevFracRef.current = firstFrac;
 
-    const p = pts[Math.round(firstFrac * (N - 1))];
-    domPlaceShip(shipRef.current, pts, firstFrac);
+    const syncScroll = (frac) => {
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      if (maxScroll > 0) {
+        window.scrollTo(0, Math.round(frac * maxScroll));
+      } else {
+        requestAnimationFrame(() => {
+          const max2 = document.documentElement.scrollHeight - window.innerHeight;
+          if (max2 > 0) window.scrollTo(0, Math.round(frac * max2));
+        });
+      }
+    };
 
-    // Set initial viewBox
-    if (svgRef.current) {
-      svgRef.current.setAttribute(
-        "viewBox",
-        `${(p.x - CAM_W_SVG / 2).toFixed(1)} ${(p.y - camH / 2).toFixed(1)} ${CAM_W_SVG} ${camH}`
-      );
+    if (reducedMotion.current) {
+      // Skip animation — jump straight to first stop
+      curFracRef.current  = firstFrac;
+      prevFracRef.current = firstFrac;
+      const p = pts[Math.round(firstFrac * (N - 1))];
+      prevAngleRef.current = p.a;
+      domPlaceShip(shipRef.current, pts, firstFrac);
+      applyCamera(p.x, p.y);
+      applyMarkerWakeup(firstFrac);
+      applyLabelVisibility(firstFrac);
+      applyShipDynamics(p, 0);
+      syncScroll(firstFrac);
+      return;
     }
 
-    // Initial parallax
-    starGroupRefs.current.forEach((g, li) => {
-      if (!g) return;
-      const f = PARALLAX[li];
-      g.setAttribute("transform",
-        `translate(${((1 - f) * p.x).toFixed(2)} ${((1 - f) * p.y).toFixed(2)})`);
-    });
-    if (nebulaRef.current) {
-      nebulaRef.current.setAttribute("transform",
-        `translate(${(0.88 * p.x).toFixed(2)} ${(0.88 * p.y).toFixed(2)})`);
-    }
+    // Intro drift: ship travels from path start → first stop over 2 s
+    curFracRef.current   = 0;
+    prevFracRef.current  = 0;
+    prevAngleRef.current = pts[0].a;
+    const p0 = pts[0];
+    domPlaceShip(shipRef.current, pts, 0);
+    applyCamera(p0.x, p0.y);
+    applyMarkerWakeup(0);
+    applyLabelVisibility(0);
 
-    applyMarkerWakeup(firstFrac);
-    applyLabelVisibility(firstFrac);
+    introPlayingRef.current = true;
+    const INTRO_MS  = 2000;
+    const startTime = performance.now();
 
-    // Pre-scroll to first stop before paint
-    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-    if (maxScroll > 0) {
-      window.scrollTo(0, Math.round(firstFrac * maxScroll));
-    } else {
-      // Layout not settled yet; defer one RAF
-      requestAnimationFrame(() => {
-        const max2 = document.documentElement.scrollHeight - window.innerHeight;
-        if (max2 > 0) window.scrollTo(0, Math.round(firstFrac * max2));
-      });
-    }
-  }, [category, applyMarkerWakeup, applyLabelVisibility]);
+    const frame = (now) => {
+      if (!introPlayingRef.current) return;
+      const t     = Math.min(1, (now - startTime) / INTRO_MS);
+      const frac  = driftEase(t) * firstFrac;
+      const spd   = Math.abs(frac - prevFracRef.current);
+      prevFracRef.current = frac;
+      curFracRef.current  = frac;
+
+      const p = pts[Math.round(frac * (N - 1))];
+      domPlaceShip(shipRef.current, pts, frac);
+      applyTrail(p, spd);
+      applyCamera(p.x, p.y);
+      applyMarkerWakeup(frac);
+      applyLabelVisibility(frac);
+      applyShipDynamics(p, spd);
+
+      if (t < 1) {
+        introRafRef.current = requestAnimationFrame(frame);
+      } else {
+        introPlayingRef.current = false;
+        introRafRef.current     = null;
+        curFracRef.current      = firstFrac;
+        prevFracRef.current     = firstFrac;
+        // Reveal stop 1's card automatically — same logic as normal scroll arrival
+        selectedRef.current = 0;
+        setSelected(0);
+        applyCard(firstFrac);
+        syncScroll(firstFrac);
+      }
+    };
+    introRafRef.current = requestAnimationFrame(frame);
+
+    return () => {
+      if (introRafRef.current) {
+        cancelAnimationFrame(introRafRef.current);
+        introRafRef.current = null;
+      }
+      introPlayingRef.current = false;
+    };
+  }, [category, applyCamera, applyTrail, applyMarkerWakeup, applyLabelVisibility, applyShipDynamics, applyCard]);
 
   // ── Scroll listener ───────────────────────────────────────────────────────
   useEffect(() => {
     const onScroll = () => {
+      if (introPlayingRef.current) return;
       if (rafPending.current) return;
       rafPending.current = true;
       requestAnimationFrame(() => {
@@ -327,6 +404,11 @@ export default function PassageNav({ category }) {
         applyLabelVisibility(frac);
         applyMarkerWakeup(frac);
         applyCard(frac);
+        applyShipDynamics(p, speed);
+        // Fade hint out once user scrolls past stop 1
+        if (hintRef.current) {
+          hintRef.current.style.opacity = frac > category.stops[0].frac + 0.05 ? "0" : "1";
+        }
 
         // Proximity: select nearest stop within APPROACH_DIST
         let nearIdx = -1;
@@ -344,7 +426,7 @@ export default function PassageNav({ category }) {
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [category, applyCamera, applyTrail, applyLabelVisibility, applyMarkerWakeup, applyCard]);
+  }, [category, applyCamera, applyTrail, applyLabelVisibility, applyMarkerWakeup, applyCard, applyShipDynamics]);
 
   // ── Keyboard navigation ───────────────────────────────────────────────────
   useEffect(() => {
@@ -405,6 +487,20 @@ export default function PassageNav({ category }) {
           <filter id="trailGlow" x="-200%" y="-200%" width="500%" height="500%">
             <feGaussianBlur stdDeviation="4" />
           </filter>
+          {/* Saucer under-beam: pure soft blur */}
+          <filter id="saucerGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="4" />
+          </filter>
+          {/* Rim accent lights: tight halo keeps them crisp */}
+          <filter id="rimGlow" x="-300%" y="-300%" width="700%" height="700%">
+            <feGaussianBlur stdDeviation="1.4" result="b" />
+            <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+          {/* Beam cone: fade from opaque at nozzle tip to transparent at bottom */}
+          <linearGradient id="beamFade" x1="0.5" y1="0" x2="0.5" y2="1">
+            <stop offset="0%"   stopColor={ACCENT} stopOpacity="0.30" />
+            <stop offset="100%" stopColor={ACCENT} stopOpacity="0"    />
+          </linearGradient>
           {/* Nebula blobs */}
           <radialGradient id="neb1" cx="50%" cy="50%" r="50%">
             <stop offset="0%"   stopColor="#3a4a8a" stopOpacity="0.18" />
@@ -556,14 +652,63 @@ export default function PassageNav({ category }) {
           ))}
         </g>
 
-        {/* Spacecraft */}
-        <g ref={shipRef} style={{ pointerEvents: "none" }} filter="url(#scGlow)">
-          {/* Main hull */}
-          <path d="M 18 0 L -13 -10.5 L -5 0 L -13 10.5 Z" fill={CREAM} />
-          {/* Cockpit window */}
-          <circle cx="-1.5" cy="0" r="2" fill={BG} />
-          {/* Engine glow (accent) */}
-          <circle cx="-13" cy="0" r="4.5" fill={ACCENT} opacity="0.55" filter="url(#engineGlow)" />
+        {/* UFO / Flying saucer */}
+        <g ref={shipRef} style={{ pointerEvents: "none" }}>
+          {/* Bank group: subtle lean into path curves */}
+          <g ref={saucerBankRef}>
+            {/* Wobble group: gentle idle hover when parked (CSS-animated) */}
+            <g
+              ref={saucerWobbleRef}
+              style={{ animation: "saucerHover 2.4s ease-in-out infinite", animationPlayState: "paused" }}
+            >
+              {/* ── Beam: translucent cone widening from nozzle tip ── */}
+              <polygon points="-2.2,5.2 2.2,5.2 9.5,20 -9.5,20"
+                fill="url(#beamFade)" />
+              <line x1="-2.2" y1="5.2" x2="-9.5" y2="20"
+                stroke={ACCENT} strokeWidth="0.28" strokeOpacity="0.36" />
+              <line x1="2.2" y1="5.2" x2="9.5" y2="20"
+                stroke={ACCENT} strokeWidth="0.28" strokeOpacity="0.36" />
+
+              {/* ── Nozzle: tapered underside protrusion where beam emits ── */}
+              <polygon points="-3.5,2.2 3.5,2.2 2.2,5.2 -2.2,5.2"
+                fill={BG} stroke={CREAM} strokeWidth="0.55" strokeLinejoin="round" />
+
+              {/* ── Lower rim BG: occludes stars inside lower hull ── */}
+              <ellipse cx="0" cy="2.4" rx="13.5" ry="2.0"
+                fill={BG} stroke="none" />
+
+              {/* ── Upper disc: main hull top surface ── */}
+              <ellipse cx="0" cy="0" rx="17" ry="3.2"
+                fill={BG} stroke={CREAM} strokeWidth="0.72" />
+
+              {/* ── Equatorial seam: structural panel line ── */}
+              <line x1="-15" y1="1.2" x2="15" y2="1.2"
+                stroke={CREAM} strokeWidth="0.22" strokeOpacity="0.28" />
+
+              {/* ── Lower rim: visible front arc — reads as disc thickness ── */}
+              <path d="M -13.5 2.4 A 13.5 2.0 0 0 0 13.5 2.4"
+                fill="none" stroke={CREAM} strokeWidth="0.68" />
+
+              {/* ── Side walls: upper disc edge → lower rim edge ── */}
+              <line x1="-17" y1="0" x2="-13.5" y2="2.4"
+                stroke={CREAM} strokeWidth="0.68" />
+              <line x1="17" y1="0" x2="13.5" y2="2.4"
+                stroke={CREAM} strokeWidth="0.68" />
+
+              {/* ── Dome base ring: junction between dome and hull ── */}
+              <ellipse cx="0" cy="0" rx="6.5" ry="1.3"
+                fill={BG} stroke={CREAM} strokeWidth="0.55" />
+
+              {/* ── Dome: raised half-dome arc, clearly above hull ── */}
+              <path d="M -6.5 0 A 6.5 5.5 0 0 1 6.5 0"
+                fill="none" stroke={CREAM} strokeWidth="0.65" />
+
+              {/* ── Rim lights: orange accents on lower rim arc ── */}
+              <circle cx="-9"  cy="3.9" r="0.65" fill={ACCENT} opacity="0.92" filter="url(#rimGlow)" />
+              <circle cx="0"   cy="4.4" r="0.65" fill={ACCENT} opacity="0.92" filter="url(#rimGlow)" />
+              <circle cx="9"   cy="3.9" r="0.65" fill={ACCENT} opacity="0.92" filter="url(#rimGlow)" />
+            </g>
+          </g>
         </g>
       </svg>
 
@@ -587,7 +732,45 @@ export default function PassageNav({ category }) {
           <Link to="/" style={backLinkStyle}>Baidi Wang</Link>
           <div style={categoryLabelStyle}>{category.label}</div>
           <div style={introStyle}>{category.intro}</div>
-          <div style={mastheadHintStyle} aria-hidden="true">Scroll to explore  ↑↓</div>
+        </div>
+
+        {/* Scroll hint: bottom-center, accent orange, fades after stop 1 */}
+        <div
+          ref={hintRef}
+          aria-hidden="true"
+          style={{
+            position: "fixed",
+            bottom: "36px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "5px",
+            pointerEvents: "none",
+            zIndex: 10,
+            transition: "opacity 0.7s ease",
+          }}
+        >
+          <span style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: "10px",
+            letterSpacing: "0.22em",
+            textTransform: "uppercase",
+            color: ACCENT,
+            animation: rm ? "none" : "hintFloat 3s ease-in-out infinite",
+          }}>
+            Scroll to explore
+          </span>
+          <span style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: "18px",
+            color: ACCENT,
+            lineHeight: 1,
+            animation: rm ? "none" : "arrowBounce 1.4s ease-in-out infinite",
+          }}>
+            ↓
+          </span>
         </div>
 
         {/* Per-stop HTML labels (positioned imperatively by applyCamera) */}
@@ -663,38 +846,74 @@ export default function PassageNav({ category }) {
           )}
         </div>
 
-        {/* Direct-access list */}
-        <nav aria-label={`${category.label} projects`} style={listNavStyle}>
-          <div style={listHeadingStyle}>The Passage</div>
-          {category.stops.map((stop, i) => {
-            const active = selected === i;
-            return (
-              <button
-                key={stop.id}
-                onClick={() => scrollToStop(i)}
-                style={listBtnStyle}
-                aria-current={active ? "true" : undefined}
-              >
-                <span
-                  style={{
-                    ...listNumStyle,
-                    color: active ? "rgba(242,239,233,0.95)" : "rgba(242,239,233,0.50)",
-                  }}
-                >
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <span
-                  style={{
-                    ...listNameStyle,
-                    color: active ? CREAM : "rgba(242,239,233,0.88)",
-                    borderBottomColor: active ? ACCENT : "transparent",
-                  }}
-                >
-                  {stop.title}
-                </span>
-              </button>
-            );
-          })}
+        {/* Direct-access list (collapsed by default, expands on hover/focus) */}
+        <nav
+          aria-label={`${category.label} projects`}
+          style={listNavStyle}
+          onMouseEnter={() => setListOpen(true)}
+          onMouseLeave={() => setListOpen(false)}
+          onFocus={() => setListOpen(true)}
+          onBlur={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget)) setListOpen(false);
+          }}
+          onKeyDown={(e) => { if (e.key === "Escape") setListOpen(false); }}
+        >
+          {listOpen ? (
+            <>
+              <div style={listHeadingStyle}>The Passage</div>
+              {category.stops.map((stop, i) => {
+                const active = selected === i;
+                return (
+                  <button
+                    key={stop.id}
+                    onClick={() => scrollToStop(i)}
+                    style={listBtnStyle}
+                    aria-current={active ? "true" : undefined}
+                  >
+                    <span style={{ ...listNumStyle, color: active ? CREAM : "rgba(242,239,233,0.50)" }}>
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span style={{ ...listNameStyle, color: active ? CREAM : "rgba(242,239,233,0.88)", borderBottomColor: active ? ACCENT : "transparent" }}>
+                      {stop.title}
+                    </span>
+                  </button>
+                );
+              })}
+            </>
+          ) : (
+            <button
+              style={listCompactBtnStyle}
+              onClick={() => setListOpen(true)}
+              aria-expanded={false}
+              aria-label={`${category.label} projects: stop ${(selected ?? 0) + 1} of ${category.stops.length}. Expand list`}
+            >
+              <span style={listProgressStyle}>
+                <span style={{ color: CREAM }}>{String((selected ?? 0) + 1).padStart(2, "0")}</span>
+                <span style={{ opacity: 0.32, margin: "0 5px" }}>/</span>
+                <span style={{ opacity: 0.52 }}>{String(category.stops.length).padStart(2, "0")}</span>
+              </span>
+              <div style={{ display: "flex", gap: "6px", marginTop: "9px" }}>
+                {category.stops.map((_, i) => {
+                  const isActive = i === selected;
+                  const isReached = selected !== null && i < selected;
+                  return (
+                    <span
+                      key={i}
+                      style={{
+                        display: "block",
+                        width: "5px",
+                        height: "5px",
+                        borderRadius: "50%",
+                        backgroundColor: isActive ? ACCENT : isReached ? "rgba(242,239,233,0.45)" : "transparent",
+                        border: isActive || isReached ? "none" : "1px solid rgba(242,239,233,0.32)",
+                        transition: "background-color 0.35s, border-color 0.35s",
+                      }}
+                    />
+                  );
+                })}
+              </div>
+            </button>
+          )}
         </nav>
       </div>
     </div>
@@ -763,16 +982,6 @@ const introStyle = {
   color: "rgba(242,239,233,0.68)",
 };
 
-const mastheadHintStyle = {
-  marginTop: "14px",
-  fontFamily: "var(--font-mono)",
-  fontSize: "10px",
-  letterSpacing: "0.18em",
-  textTransform: "uppercase",
-  color: "rgba(242,239,233,0.50)",
-  whiteSpace: "nowrap",
-  pointerEvents: "none",
-};
 
 // Canvas labels (positioned imperatively)
 const labelNumStyle = {
@@ -799,6 +1008,23 @@ const listNavStyle = {
   flexDirection: "column",
   gap: "2px",
   pointerEvents: "auto",
+};
+
+const listCompactBtnStyle = {
+  background: "none",
+  border: "none",
+  padding: "0",
+  cursor: "pointer",
+  textAlign: "left",
+  fontFamily: "var(--font-mono)",
+  color: CREAM,
+};
+
+const listProgressStyle = {
+  fontFamily: "var(--font-mono)",
+  fontSize: "13px",
+  letterSpacing: "0.14em",
+  color: "rgba(242,239,233,0.78)",
 };
 
 const listHeadingStyle = {
