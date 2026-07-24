@@ -59,9 +59,25 @@ g[role="button"]:focus-visible .marker-kbd-ring { opacity: 1 !important; }
 .passage-link:hover { color: var(--color-accent); border-bottom-color: var(--color-accent); }
 
 /* Passage nav */
-@keyframes saucerHover {
+@keyframes shipHover {
   0%, 100% { transform: translateY(0); }
   50%       { transform: translateY(-1.6px); }
+}
+@keyframes armSwayL {
+  0%, 100% { transform: rotate(-4deg); }
+  50%       { transform: rotate(5deg); }
+}
+@keyframes armSwayR {
+  0%, 100% { transform: rotate(4deg); }
+  50%       { transform: rotate(-5deg); }
+}
+@keyframes legSwayL {
+  0%, 100% { transform: rotate(-2deg); }
+  50%       { transform: rotate(2.5deg); }
+}
+@keyframes legSwayR {
+  0%, 100% { transform: rotate(2deg); }
+  50%       { transform: rotate(-2.5deg); }
 }
 @keyframes hintFloat {
   0%, 100% { opacity: 0.62; }

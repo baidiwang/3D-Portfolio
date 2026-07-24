@@ -9,19 +9,16 @@ export const categories = {
       "Guide the craft along the passage. Each stop is a project — or jump directly from the list.",
     stops: [
       {
-        id: "web-trustpath",
-        title: "TrustPath",
+        id: "web-lookcloser",
+        title: "Look Closer",
         category: "AI Interface",
         oneLineDescription:
-          "A renter-controlled document copilot that shows its evidence — every extracted field comes with source quotes and confidence, and stays fully editable by the user.",
-        tags: ["OpenAI API", "Serverless", "JavaScript", "AI Guardrails"],
-        thumbnail: "/thumbnails/trustPath.gif",
+          "An artwork viewer where attention is the interface — it senses where your gaze lingers on a painting and quietly opens the story behind that detail.",
+        tags: ["Next.js", "TypeScript", "OpenAI API", "Attention Detection"],
+        thumbnail: "/thumbnails/lookCloser.gif",
         links: [
-          { label: "Live", url: "https://trust-path-copilot.vercel.app/" },
-          {
-            label: "GitHub",
-            url: "https://github.com/baidiwang/TrustPath",
-          },
+          { label: "Live", url: "https://look-closer-masterpiece.vercel.app/" },
+          { label: "GitHub", url: "https://github.com/baidiwang/LookCloser" },
         ],
         frac: 0.12,
       },
@@ -43,6 +40,23 @@ export const categories = {
         frac: 0.38,
       },
       {
+        id: "web-trustpath",
+        title: "TrustPath",
+        category: "AI Interface",
+        oneLineDescription:
+          "A renter-controlled document copilot that shows its evidence — every extracted field comes with source quotes and confidence, and stays fully editable by the user.",
+        tags: ["OpenAI API", "Serverless", "JavaScript", "AI Guardrails"],
+        thumbnail: "/thumbnails/trustPath.gif",
+        links: [
+          { label: "Live", url: "https://trust-path-copilot.vercel.app/" },
+          {
+            label: "GitHub",
+            url: "https://github.com/baidiwang/TrustPath",
+          },
+        ],
+        frac: 0.62,
+      },
+      {
         id: "web-2",
         title: "Google Play Prototypes",
         category: "UX Engineering",
@@ -54,23 +68,6 @@ export const categories = {
           {
             label: "View on Medium",
             url: "https://medium.com/@WangPortfolio/web-and-mobile-projects-5922cfb86b60?postPublishedType=repub",
-          },
-        ],
-        frac: 0.62,
-      },
-      {
-        id: "web-3",
-        title: "Book Library",
-        category: "Full-Stack Web",
-        oneLineDescription:
-          "A responsive book library app with a Figma-designed UI, REST API, and unit-tested front and back end.",
-        tags: ["React", "MUI", "Node.js", "Zustand", "Jest"],
-        thumbnail: "/thumbnails/book.gif",
-        links: [
-          { label: "GitHub", url: "https://github.com/baidiwang/book-library" },
-          {
-            label: "Figma",
-            url: "https://www.figma.com/design/b6RUVO5GreNBg2Hou5MoHy/VISA-assessment-design",
           },
         ],
         frac: 0.88,
@@ -96,6 +93,19 @@ export const categories = {
       "Guide the craft along the passage. Each stop is a project — or jump directly from the list.",
     stops: [
       {
+        id: "design-lookcloser",
+        title: "Look Closer",
+        category: "Interaction Design",
+        oneLineDescription:
+          "Designing an interface that responds to looking itself — no hotspots, no chat box, no markers competing with the painting. Attention becomes the only input.",
+        tags: ["Interaction Design", "AI UX", "Editorial Design"],
+        thumbnail: "/thumbnails/lookCloser.gif",
+        links: [
+          { label: "Live", url: "https://look-closer-masterpiece.vercel.app/" },
+        ],
+        frac: 0.12,
+      },
+      {
         id: "design-1",
         title: "Lily",
         category: "AI Interface Design",
@@ -104,7 +114,7 @@ export const categories = {
         tags: ["Voice UI", "Interaction Design", "Figma", "Real-time UX"],
         thumbnail: "/thumbnails/lily.gif",
         links: [{ label: "Live", url: "https://voice-first-chat.vercel.app/" }],
-        frac: 0.15,
+        frac: 0.38,
       },
       {
         id: "design-2",
@@ -120,7 +130,7 @@ export const categories = {
             url: "https://medium.com/@WangPortfolio/daily-data-viz-graphics-bc698435092a",
           },
         ],
-        frac: 0.5,
+        frac: 0.62,
       },
       {
         id: "design-3",
@@ -136,7 +146,7 @@ export const categories = {
             url: "https://www.figma.com/design/b6RUVO5GreNBg2Hou5MoHy/VISA-assessment-design",
           },
         ],
-        frac: 0.85,
+        frac: 0.88,
       },
       // 新项目 — 下周做完后替换 Book Library 或新增
       // {

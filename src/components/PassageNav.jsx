@@ -11,6 +11,8 @@ const APPROACH_DIST = 0.12; // card starts appearing (dim)
 const ARRIVE_DIST   = 0.04; // card fully lit + accent state
 const TRAIL_LEN    = 8;
 const CAM_W_SVG    = 480;   // camera viewport width in SVG units (3× zoom at 1440px)
+const MASTHEAD_SAFE_X = 420; // px — labels left of this x are checked against the masthead
+const MASTHEAD_SAFE_Y = 230; // px — labels above this y are pushed down to clear the masthead
 
 // Parallax factors per layer (0 = deepest/slowest, 1 = normal/locked to world)
 const PARALLAX = [0.18, 0.46, 0.74, 1.08];
@@ -60,7 +62,8 @@ function domPlaceShip(ship, pts, frac) {
   if (!ship || !pts.length) return;
   const idx = Math.round(Math.max(0, Math.min(1, frac)) * (N - 1));
   const p   = pts[idx];
-  // UFO: position only — no tangent rotation (saucer is radially symmetric)
+  // Position only — tilt into the path direction is applied separately via
+  // shipBankRef in applyShipDynamics (astronaut stays upright with a slight lean).
   ship.setAttribute("transform", `translate(${p.x.toFixed(2)} ${p.y.toFixed(2)})`);
 }
 
@@ -90,8 +93,8 @@ export default function PassageNav({ category }) {
   const rafPending      = useRef(false);
   const introPlayingRef = useRef(false);
   const introRafRef     = useRef(null);
-  const saucerBankRef   = useRef(null);   // inner SVG <g> for banking tilt
-  const saucerWobbleRef = useRef(null);   // innermost <g> for idle hover wobble
+  const shipBankRef     = useRef(null);   // inner SVG <g> for banking tilt
+  const shipWobbleRef   = useRef(null);   // innermost <g> for idle hover wobble
   const bankRef         = useRef(0);      // current bank angle (degrees)
   const prevAngleRef    = useRef(0);      // previous path tangent angle for dAngle calc
   const hintRef         = useRef(null);   // bottom-center scroll hint
@@ -148,7 +151,12 @@ export default function PassageNav({ category }) {
       const dir      = xy.labelOnRight ? 1 : -1;
       const offsetPx = ringEdgePx * dir;
       const flipStr  = xy.labelOnRight ? "" : " translateX(-100%)";
-      lbl.style.transform = `translate(${(sx + offsetPx).toFixed(1)}px, ${(sy - 18).toFixed(1)}px)${flipStr}`;
+      const labelX = sx + offsetPx;
+      // Keep labels clear of the fixed masthead (top-left title/intro block)
+      const top = (labelX < MASTHEAD_SAFE_X && sy - 18 < MASTHEAD_SAFE_Y)
+        ? MASTHEAD_SAFE_Y
+        : sy - 18;
+      lbl.style.transform = `translate(${labelX.toFixed(1)}px, ${top.toFixed(1)}px)${flipStr}`;
     });
   }, []);
 
@@ -249,12 +257,12 @@ export default function PassageNav({ category }) {
     prevAngleRef.current = p.a;
     const targetBank   = Math.max(-15, Math.min(15, dAngle * 2.4));
     bankRef.current    = bankRef.current * 0.84 + targetBank * 0.16;
-    if (saucerBankRef.current) {
-      saucerBankRef.current.setAttribute("transform", `rotate(${bankRef.current.toFixed(2)})`);
+    if (shipBankRef.current) {
+      shipBankRef.current.setAttribute("transform", `rotate(${bankRef.current.toFixed(2)})`);
     }
     // Wobble: resume when parked, pause when moving
-    if (saucerWobbleRef.current) {
-      saucerWobbleRef.current.style.animationPlayState = speed > 0.0005 ? "paused" : "running";
+    if (shipWobbleRef.current) {
+      shipWobbleRef.current.style.animationPlayState = speed > 0.0005 ? "paused" : "running";
     }
   }, []);
 
@@ -487,20 +495,21 @@ export default function PassageNav({ category }) {
           <filter id="trailGlow" x="-200%" y="-200%" width="500%" height="500%">
             <feGaussianBlur stdDeviation="4" />
           </filter>
-          {/* Saucer under-beam: pure soft blur */}
-          <filter id="saucerGlow" x="-100%" y="-100%" width="300%" height="300%">
+          {/* Figure ambient glow: pure soft blur */}
+          <filter id="figureGlow" x="-100%" y="-100%" width="300%" height="300%">
             <feGaussianBlur stdDeviation="4" />
           </filter>
+          {/* Visor: glass depth — pale sky reflection fading to deep navy */}
+          <linearGradient id="visorGrad" x1="0.2" y1="0" x2="0.8" y2="1">
+            <stop offset="0%"   stopColor="#5c86a8" />
+            <stop offset="42%"  stopColor="#1c3348" />
+            <stop offset="100%" stopColor="#08121c" />
+          </linearGradient>
           {/* Rim accent lights: tight halo keeps them crisp */}
           <filter id="rimGlow" x="-300%" y="-300%" width="700%" height="700%">
             <feGaussianBlur stdDeviation="1.4" result="b" />
             <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
-          {/* Beam cone: fade from opaque at nozzle tip to transparent at bottom */}
-          <linearGradient id="beamFade" x1="0.5" y1="0" x2="0.5" y2="1">
-            <stop offset="0%"   stopColor={ACCENT} stopOpacity="0.30" />
-            <stop offset="100%" stopColor={ACCENT} stopOpacity="0"    />
-          </linearGradient>
           {/* Nebula blobs */}
           <radialGradient id="neb1" cx="50%" cy="50%" r="50%">
             <stop offset="0%"   stopColor="#3a4a8a" stopOpacity="0.18" />
@@ -652,61 +661,90 @@ export default function PassageNav({ category }) {
           ))}
         </g>
 
-        {/* UFO / Flying saucer */}
+        {/* Astronaut: cute 2D cartoon figure, drifting along the path */}
         <g ref={shipRef} style={{ pointerEvents: "none" }}>
-          {/* Bank group: subtle lean into path curves */}
-          <g ref={saucerBankRef}>
-            {/* Wobble group: gentle idle hover when parked (CSS-animated) */}
+          {/* Bank group: subtle lean into path curves (stays upright, ±15°) */}
+          <g ref={shipBankRef}>
+            {/* Wobble group: gentle idle bob when parked (CSS-animated) */}
             <g
-              ref={saucerWobbleRef}
-              style={{ animation: "saucerHover 2.4s ease-in-out infinite", animationPlayState: "paused" }}
+              ref={shipWobbleRef}
+              style={{ animation: "shipHover 2.6s ease-in-out infinite", animationPlayState: "paused" }}
             >
-              {/* ── Beam: translucent cone widening from nozzle tip ── */}
-              <polygon points="-2.2,5.2 2.2,5.2 9.5,20 -9.5,20"
-                fill="url(#beamFade)" />
-              <line x1="-2.2" y1="5.2" x2="-9.5" y2="20"
-                stroke={ACCENT} strokeWidth="0.28" strokeOpacity="0.36" />
-              <line x1="2.2" y1="5.2" x2="9.5" y2="20"
-                stroke={ACCENT} strokeWidth="0.28" strokeOpacity="0.36" />
+              {/* ── Tether: short accent umbilical trailing from the backpack ── */}
+              <path d="M 5.4 9.5 Q 9 13 7.6 18.5"
+                fill="none" stroke={ACCENT} strokeWidth="0.55" strokeOpacity="0.55"
+                strokeDasharray="1.3 1.5" strokeLinecap="round" />
 
-              {/* ── Nozzle: tapered underside protrusion where beam emits ── */}
-              <polygon points="-3.5,2.2 3.5,2.2 2.2,5.2 -2.2,5.2"
-                fill={BG} stroke={CREAM} strokeWidth="0.55" strokeLinejoin="round" />
+              {/* ── Legs: gently swaying, each rotated about its hip joint ── */}
+              <g transform="translate(-2.6 9.8)">
+                <g style={{
+                  animation: "legSwayL 4.6s ease-in-out infinite",
+                  animationPlayState: rm ? "paused" : "running",
+                  transformOrigin: "0px 0px",
+                }}>
+                  <path d="M 0 0 Q -1.3 5.4 -0.7 10.2" fill="none" stroke={CREAM} strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
+                  <ellipse cx="-0.7" cy="11" rx="1.9" ry="1.3" fill={BG} stroke={CREAM} strokeWidth="0.7" />
+                </g>
+              </g>
+              <g transform="translate(2.6 9.8)">
+                <g style={{
+                  animation: "legSwayR 4.6s ease-in-out infinite",
+                  animationDelay: "-2.3s",
+                  animationPlayState: rm ? "paused" : "running",
+                  transformOrigin: "0px 0px",
+                }}>
+                  <path d="M 0 0 Q 1.3 5.4 0.7 10.2" fill="none" stroke={CREAM} strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
+                  <ellipse cx="0.7" cy="11" rx="1.9" ry="1.3" fill={BG} stroke={CREAM} strokeWidth="0.7" />
+                </g>
+              </g>
 
-              {/* ── Lower rim BG: occludes stars inside lower hull ── */}
-              <ellipse cx="0" cy="2.4" rx="13.5" ry="2.0"
-                fill={BG} stroke="none" />
+              {/* ── Backpack: life-support unit, peeking past the torso silhouette ── */}
+              <rect x="-7.1" y="-1" width="14.2" height="14" rx="3.2"
+                fill={BG} stroke={CREAM} strokeWidth="0.65" strokeOpacity="0.55" />
 
-              {/* ── Upper disc: main hull top surface ── */}
-              <ellipse cx="0" cy="0" rx="17" ry="3.2"
-                fill={BG} stroke={CREAM} strokeWidth="0.72" />
+              {/* ── Suit body: rounded, solid torso ── */}
+              <rect x="-6.5" y="-1.5" width="13" height="13" rx="6"
+                fill={BG} stroke={CREAM} strokeWidth="1.05" strokeLinejoin="round" />
 
-              {/* ── Equatorial seam: structural panel line ── */}
-              <line x1="-15" y1="1.2" x2="15" y2="1.2"
-                stroke={CREAM} strokeWidth="0.22" strokeOpacity="0.28" />
+              {/* ── Arms: gently swaying, each rotated about its shoulder joint ── */}
+              <g transform="translate(-6.1 0.5)">
+                <g style={{
+                  animation: "armSwayL 3.4s ease-in-out infinite",
+                  animationPlayState: rm ? "paused" : "running",
+                  transformOrigin: "0px 0px",
+                }}>
+                  <path d="M 0 0 Q -4.8 2.7 -3.9 8.5" fill="none" stroke={CREAM} strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
+                  <circle cx="-3.9" cy="9.2" r="1.55" fill={BG} stroke={CREAM} strokeWidth="0.7" />
+                </g>
+              </g>
+              <g transform="translate(6.1 0.5)">
+                <g style={{
+                  animation: "armSwayR 3.4s ease-in-out infinite",
+                  animationDelay: "-1.7s",
+                  animationPlayState: rm ? "paused" : "running",
+                  transformOrigin: "0px 0px",
+                }}>
+                  <path d="M 0 0 Q 4.8 2.7 3.9 8.5" fill="none" stroke={CREAM} strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
+                  <circle cx="3.9" cy="9.2" r="1.55" fill={BG} stroke={CREAM} strokeWidth="0.7" />
+                </g>
+              </g>
 
-              {/* ── Lower rim: visible front arc — reads as disc thickness ── */}
-              <path d="M -13.5 2.4 A 13.5 2.0 0 0 0 13.5 2.4"
-                fill="none" stroke={CREAM} strokeWidth="0.68" />
+              {/* ── Chest light: small accent indicator ── */}
+              <circle cx="0" cy="4.5" r="1.25" fill={ACCENT} opacity="0.92" filter="url(#rimGlow)" />
+              {/* ── Suit seam ── */}
+              <line x1="-5.1" y1="1.7" x2="5.1" y2="1.7" stroke={CREAM} strokeWidth="0.26" strokeOpacity="0.3" />
 
-              {/* ── Side walls: upper disc edge → lower rim edge ── */}
-              <line x1="-17" y1="0" x2="-13.5" y2="2.4"
-                stroke={CREAM} strokeWidth="0.68" />
-              <line x1="17" y1="0" x2="13.5" y2="2.4"
-                stroke={CREAM} strokeWidth="0.68" />
+              {/* ── Neck seal: junction between helmet and suit ── */}
+              <ellipse cx="0" cy="-2.1" rx="3.6" ry="1.2" fill={BG} stroke={CREAM} strokeWidth="0.7" />
 
-              {/* ── Dome base ring: junction between dome and hull ── */}
-              <ellipse cx="0" cy="0" rx="6.5" ry="1.3"
-                fill={BG} stroke={CREAM} strokeWidth="0.55" />
-
-              {/* ── Dome: raised half-dome arc, clearly above hull ── */}
-              <path d="M -6.5 0 A 6.5 5.5 0 0 1 6.5 0"
-                fill="none" stroke={CREAM} strokeWidth="0.65" />
-
-              {/* ── Rim lights: accent glow on lower rim arc ── */}
-              <circle cx="-9"  cy="3.9" r="0.65" fill={ACCENT} opacity="0.92" filter="url(#rimGlow)" />
-              <circle cx="0"   cy="4.4" r="0.65" fill={ACCENT} opacity="0.92" filter="url(#rimGlow)" />
-              <circle cx="9"   cy="3.9" r="0.65" fill={ACCENT} opacity="0.92" filter="url(#rimGlow)" />
+              {/* ── Helmet ── */}
+              <circle cx="0" cy="-8.5" r="7" fill={BG} stroke={CREAM} strokeWidth="1.05" />
+              {/* Visor: gradient glass reads depth instead of a flat void */}
+              <ellipse cx="0.6" cy="-9.1" rx="4.5" ry="4" fill="url(#visorGrad)" stroke={CREAM} strokeWidth="0.55" />
+              {/* Visor reflection sweep */}
+              <path d="M -2.7 -11.6 Q 0.6 -12.9 3 -11.3" fill="none" stroke={CREAM} strokeWidth="0.4" strokeOpacity="0.24" strokeLinecap="round" />
+              {/* Visor glare */}
+              <ellipse cx="-1.3" cy="-10.7" rx="1.6" ry="1" fill={CREAM} opacity="0.38" />
             </g>
           </g>
         </g>
@@ -795,7 +833,8 @@ export default function PassageNav({ category }) {
           </div>
         ))}
 
-        {/* Floating project card — proximity-triggered, opacity/glow managed imperatively */}
+        {/* Floating card stage: starts below the masthead so the card can never cover it */}
+        <div style={cardStageStyle}>
         <div
           ref={cardRef}
           role={selStop ? "dialog" : undefined}
@@ -844,6 +883,7 @@ export default function PassageNav({ category }) {
               </div>
             </>
           )}
+        </div>
         </div>
 
         {/* Direct-access list (collapsed by default, expands on hover/focus) */}
@@ -1064,13 +1104,24 @@ const listNameStyle = {
   paddingBottom: "1px",
 };
 
+// Floating card stage: positioned below the masthead so the card is always
+// vertically centered within the safe area, never behind the header/intro.
+const cardStageStyle = {
+  position: "absolute",
+  top: `${MASTHEAD_SAFE_Y}px`,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  pointerEvents: "none",
+};
+
 // Floating project card
 const floatingCardStyle = {
   position: "absolute",
   top: "50%",
   transform: "translateY(-50%)",
   width: "clamp(300px, 30vw, 390px)",
-  maxHeight: "80vh",
+  maxHeight: `calc(100vh - ${MASTHEAD_SAFE_Y + 40}px)`,
   zIndex: 20,
   background: "rgba(5,5,5,0.88)",
   backdropFilter: "blur(12px)",
