@@ -58,6 +58,21 @@ g[role="button"]:focus-visible .marker-kbd-ring { opacity: 1 !important; }
 /* Passage card link hover — accent */
 .passage-link:hover { color: var(--color-accent); border-bottom-color: var(--color-accent); }
 
+/*
+ * Passage scroll container height. `vh` on mobile browsers is tied to the
+ * *layout* viewport (address bar collapsed/expanded), which can go out of
+ * sync with `window.innerHeight` (the *visual* viewport the scroll math in
+ * PassageNav.jsx actually reads) right at the top/bottom scroll boundary —
+ * the container can end up shorter than the app thinks, pinning scroll.
+ * `dvh` tracks the same dynamic viewport `window.innerHeight` does, so the
+ * two stay consistent. Plain `vh` is kept as a fallback for browsers
+ * without `dvh` support; the second declaration wins wherever it's understood.
+ */
+.passage-scene {
+  height: calc(var(--passage-vh) * 1vh);
+  height: calc(var(--passage-vh) * 1dvh);
+}
+
 /* Passage nav */
 @keyframes shipHover {
   0%, 100% { transform: translateY(0); }

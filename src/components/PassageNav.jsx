@@ -436,6 +436,24 @@ export default function PassageNav({ category }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, [category, applyCamera, applyTrail, applyLabelVisibility, applyMarkerWakeup, applyCard, applyShipDynamics]);
 
+  // ── Resize listener ────────────────────────────────────────────────────────
+  // Keeps the camera's aspect ratio in sync with window.innerHeight, which
+  // changes on mobile whenever the browser chrome (address bar) shows/hides —
+  // camRef.h was otherwise only ever measured once, at mount.
+  useEffect(() => {
+    const onResize = () => {
+      const camH = Math.round(CAM_W_SVG * window.innerHeight / window.innerWidth);
+      camRef.current = { w: CAM_W_SVG, h: camH };
+      const pts = samplesRef.current;
+      if (!pts.length) return;
+      const p = pts[Math.round(curFracRef.current * (N - 1))];
+      applyCamera(p.x, p.y);
+      applyLabelVisibility(curFracRef.current);
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [applyCamera, applyLabelVisibility]);
+
   // ── Keyboard navigation ───────────────────────────────────────────────────
   useEffect(() => {
     const n = category.stops.length;
@@ -457,7 +475,10 @@ export default function PassageNav({ category }) {
   const scrollHeightVh = category.stops.length * 80 + 100;
 
   return (
-    <div style={{ ...sceneStyle, height: `${scrollHeightVh}vh` }}>
+    <div
+      className="passage-scene"
+      style={{ ...sceneStyle, "--passage-vh": scrollHeightVh }}
+    >
 
       {/* ── Fixed SVG: cosmos, path, markers, ship, trail ── */}
       <svg
@@ -1121,7 +1142,7 @@ const floatingCardStyle = {
   top: "50%",
   transform: "translateY(-50%)",
   width: "clamp(300px, 30vw, 390px)",
-  maxHeight: `calc(100vh - ${MASTHEAD_SAFE_Y + 40}px)`,
+  maxHeight: `calc(100dvh - ${MASTHEAD_SAFE_Y + 40}px)`,
   zIndex: 20,
   background: "rgba(5,5,5,0.88)",
   backdropFilter: "blur(12px)",
