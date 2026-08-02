@@ -80,47 +80,43 @@ export function SpaceStation({
   // Define a damping factor to control rotation damping
   const dampingFactor = 0.95;
 
-  // Handle pointer (mouse or touch) down event
+  // Handle pointer (mouse or touch) down event — only ever bound to the
+  // canvas itself (see effect below), so this can never intercept taps on
+  // HTML UI (nav links, buttons) layered above/around the 3D scene.
+  // Note: no stopPropagation() here — React Three Fiber's own raycasting
+  // event dispatch (marker hover/click) listens on this same canvas, and
+  // stopping propagation would swallow the event before R3F ever sees it.
   const handlePointerDown = (event) => {
-    event.stopPropagation();
     event.preventDefault();
     setIsRotating(true);
 
-    // Calculate the clientX based on whether it's a touch event or a mouse event
-    const clientX = event.touches ? event.touches[0].clientX : event.clientX;
-
-    // Store the current clientX position for reference
-    lastX.current = clientX;
+    lastX.current = event.clientX;
   };
 
   // Handle pointer (mouse or touch) up event
-  const handlePointerUp = (event) => {
-    event.stopPropagation();
-    event.preventDefault();
+  const handlePointerUp = () => {
     setIsRotating(false);
   };
 
   // Handle pointer (mouse or touch) move event
   const handlePointerMove = (event) => {
-    event.stopPropagation();
+    if (!isRotating) return;
+    // Only suppress the default action (page scroll/selection) while an
+    // actual drag is in progress.
     event.preventDefault();
-    if (isRotating) {
-      // If rotation is enabled, calculate the change in clientX position
-      const clientX = event.touches ? event.touches[0].clientX : event.clientX;
 
-      // calculate the change in the horizontal position of the mouse cursor or touch input,
-      // relative to the viewport's width
-      const delta = (clientX - lastX.current) / viewport.width;
+    // calculate the change in the horizontal position of the pointer,
+    // relative to the viewport's width
+    const delta = (event.clientX - lastX.current) / viewport.width;
 
-      // Update the island's rotation based on the mouse/touch movement
-      spaceStationRef.current.rotation.y += delta * 0.1 * Math.PI;
+    // Update the island's rotation based on the mouse/touch movement
+    spaceStationRef.current.rotation.y += delta * 0.1 * Math.PI;
 
-      // Update the reference for the last clientX position
-      lastX.current = clientX;
+    // Update the reference for the last clientX position
+    lastX.current = event.clientX;
 
-      // Update the rotation speed
-      rotationSpeed.current = delta * 0.1 * Math.PI;
-    }
+    // Update the rotation speed
+    rotationSpeed.current = delta * 0.1 * Math.PI;
   };
 
   // Handle keydown events
@@ -145,58 +141,35 @@ export function SpaceStation({
     }
   };
 
-  // Touch events for mobile devices
-  const handleTouchStart = (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-    setIsRotating(true);
-
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    lastX.current = clientX;
-  };
-
-  const handleTouchEnd = (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-    setIsRotating(false);
-  };
-
-  const handleTouchMove = (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-
-    if (isRotating) {
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const delta = (clientX - lastX.current) / viewport.width;
-
-      spaceStationRef.current.rotation.y += delta * 0.1 * Math.PI;
-      lastX.current = clientX;
-      rotationSpeed.current = delta * 0.1 * Math.PI;
-    }
-  };
-
   useEffect(() => {
-    // Add event listeners for pointer and keyboard events
+    // Pointer Events unify mouse/touch/pen, so a single set of listeners
+    // covers both — no separate touchstart/touchmove handlers needed.
+    //
+    // pointerdown is bound to the canvas ONLY (not document/window): that's
+    // what previously let every tap anywhere on the page — including the
+    // "View ... Projects" links rendered above the 3D scene — start a drag
+    // and have its default action (and therefore its click) suppressed.
+    // pointermove/pointerup stay on window so a drag that started on the
+    // canvas keeps tracking smoothly even if the pointer strays off it.
+    //
+    // { passive: false } is explicit here because handlePointerDown/Move
+    // call preventDefault() to suppress page scroll/selection during a drag.
     const canvas = gl.domElement;
-    document.addEventListener("pointerdown", handlePointerDown);
-    document.addEventListener("pointerup", handlePointerUp);
-    document.addEventListener("pointermove", handlePointerMove);
+    canvas.addEventListener("pointerdown", handlePointerDown, { passive: false });
+    window.addEventListener("pointerup", handlePointerUp);
+    window.addEventListener("pointercancel", handlePointerUp);
+    window.addEventListener("pointermove", handlePointerMove, { passive: false });
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
-    document.addEventListener("touchstart", handleTouchStart);
-    document.addEventListener("touchend", handleTouchEnd);
-    document.addEventListener("touchmove", handleTouchMove);
 
     // Remove event listeners when component unmounts
     return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
-      document.removeEventListener("pointerup", handlePointerUp);
-      document.removeEventListener("pointermove", handlePointerMove);
+      canvas.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointercancel", handlePointerUp);
+      window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
-      document.removeEventListener("touchstart", handleTouchStart);
-      document.removeEventListener("touchend", handleTouchEnd);
-      document.removeEventListener("touchmove", handleTouchMove);
     };
   }, [gl, handlePointerDown, handlePointerUp, handlePointerMove]);
 

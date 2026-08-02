@@ -691,11 +691,6 @@ export default function PassageNav({ category }) {
               ref={shipWobbleRef}
               style={{ animation: "shipHover 2.6s ease-in-out infinite", animationPlayState: "paused" }}
             >
-              {/* ── Tether: short accent umbilical trailing from the backpack ── */}
-              <path d="M 5.4 9.5 Q 9 13 7.6 18.5"
-                fill="none" stroke={ACCENT} strokeWidth="0.55" strokeOpacity="0.55"
-                strokeDasharray="1.3 1.5" strokeLinecap="round" />
-
               {/* ── Legs: gently swaying, each rotated about its hip joint ── */}
               <g transform="translate(-2.6 9.8)">
                 <g style={{

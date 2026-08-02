@@ -15,7 +15,7 @@ export const categories = {
         oneLineDescription:
           "An artwork viewer where attention is the interface — it senses where your gaze lingers on a painting and quietly opens the story behind that detail.",
         tags: ["Next.js", "TypeScript", "OpenAI API", "Attention Detection"],
-        thumbnail: "/thumbnails/lookCloser.gif",
+        thumbnail: "/thumbnails/look-closer.gif",
         links: [
           { label: "Live", url: "https://look-closer-masterpiece.vercel.app/" },
           { label: "GitHub", url: "https://github.com/baidiwang/LookCloser" },
@@ -99,7 +99,7 @@ export const categories = {
         oneLineDescription:
           "Designing an interface that responds to looking itself — no hotspots, no chat box, no markers competing with the painting. Attention becomes the only input.",
         tags: ["Interaction Design", "AI UX", "Editorial Design"],
-        thumbnail: "/thumbnails/lookCloser.gif",
+        thumbnail: "/thumbnails/look-closer.gif",
         links: [
           { label: "Live", url: "https://look-closer-masterpiece.vercel.app/" },
         ],
