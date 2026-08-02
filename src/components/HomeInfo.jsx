@@ -44,7 +44,7 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
           to="/web"
           className="mt-6 bg-white text-black text-center px-4 py-2 rounded hover:bg-gray-200 transition w-fit mx-auto"
         >
-          View Web Projects
+          View Web & AI Projects
         </Link>
       </div>
     );

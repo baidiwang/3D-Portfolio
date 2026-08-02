@@ -4,7 +4,7 @@ export const PATH_D =
 export const categories = {
   web: {
     slug: "web",
-    label: "AI & Web",
+    label: "Web & AI",
     intro:
       "Guide the craft along the passage. Each stop is a project — or jump directly from the list.",
     stops: [
