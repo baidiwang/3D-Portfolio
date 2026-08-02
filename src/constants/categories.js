@@ -15,7 +15,7 @@ export const categories = {
         oneLineDescription:
           "A desktop-pet working-memory companion for ADHD brains — a little toaster that drops a marker when your attention drifts, then rebuilds \"where was I?\" with AI when you return.",
         tags: ["Tauri", "Rust", "React", "TypeScript", "Claude API"],
-        thumbnail: null, // gif 后补
+        thumbnail: "/thumbnails/breadcrumb.gif",
         links: [
           { label: "GitHub", url: "https://github.com/baidiwang/breadcrumb" },
         ],
