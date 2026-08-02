@@ -4,10 +4,23 @@ export const PATH_D =
 export const categories = {
   web: {
     slug: "web",
-    label: "Web",
+    label: "AI & Web",
     intro:
       "Guide the craft along the passage. Each stop is a project — or jump directly from the list.",
     stops: [
+      {
+        id: "web-breadcrumb",
+        title: "Breadcrumb",
+        category: "AI Desktop App",
+        oneLineDescription:
+          "A desktop-pet working-memory companion for ADHD brains — a little toaster that drops a marker when your attention drifts, then rebuilds \"where was I?\" with AI when you return.",
+        tags: ["Tauri", "Rust", "React", "TypeScript", "Claude API"],
+        thumbnail: null, // gif 后补
+        links: [
+          { label: "GitHub", url: "https://github.com/baidiwang/breadcrumb" },
+        ],
+        frac: 0.12,
+      },
       {
         id: "web-lookcloser",
         title: "Look Closer",
@@ -20,7 +33,7 @@ export const categories = {
           { label: "Live", url: "https://look-closer-masterpiece.vercel.app/" },
           { label: "GitHub", url: "https://github.com/baidiwang/LookCloser" },
         ],
-        frac: 0.12,
+        frac: 0.31,
       },
       {
         id: "web-1",
@@ -37,7 +50,7 @@ export const categories = {
             url: "https://github.com/baidiwang/voice-first-chat",
           },
         ],
-        frac: 0.38,
+        frac: 0.5,
       },
       {
         id: "web-trustpath",
@@ -54,7 +67,7 @@ export const categories = {
             url: "https://github.com/baidiwang/TrustPath",
           },
         ],
-        frac: 0.62,
+        frac: 0.69,
       },
       {
         id: "web-2",
