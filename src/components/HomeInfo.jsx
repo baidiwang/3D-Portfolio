@@ -44,7 +44,7 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
           to="/web"
           className="mt-6 bg-white text-black text-center px-4 py-2 rounded hover:bg-gray-200 transition w-fit mx-auto"
         >
-          View Web & AI Projects
+          View AI & Web Projects
         </Link>
       </div>
     );
@@ -103,7 +103,7 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
           to="/game-xr"
           className="mt-6 bg-white text-black text-center px-4 py-2 rounded hover:bg-gray-200 transition w-fit mx-auto"
         >
-          View Game/XR Projects
+          View Game & XR Projects
         </Link>
       </div>
     );

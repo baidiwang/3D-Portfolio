@@ -238,12 +238,18 @@ export default function PassageNav({ category }) {
       : "0 20px 60px rgba(0,0,0,0.55)";
     card.style.pointerEvents = arrived ? "auto" : "none";
 
-    // Horizontal position: card on right when stop is center/right of path
+    // Horizontal position: card on right when stop is center/right of path.
+    // The gap from the viewport edge grows on wide viewports (pulling the
+    // card in toward the astronaut, which always sits at screen-center) but
+    // holds at the original 40px below ~1233px — comfortably covers phones
+    // and tablets, where the card is already near its 300px min-width and
+    // pulling it in further would risk overlapping the astronaut/marker.
     const xy = stopsXYRef.current[selectedRef.current];
     if (xy) {
       const onRight = xy.x >= 720;
-      card.style.right = onRight ? "40px" : "auto";
-      card.style.left  = onRight ? "auto" : "40px";
+      const edgeGap = `${Math.min(280, Math.max(40, (window.innerWidth - 1100) * 0.55)).toFixed(0)}px`;
+      card.style.right = onRight ? edgeGap : "auto";
+      card.style.left  = onRight ? "auto" : edgeGap;
     }
   }, [category]);
 
@@ -449,10 +455,11 @@ export default function PassageNav({ category }) {
       const p = pts[Math.round(curFracRef.current * (N - 1))];
       applyCamera(p.x, p.y);
       applyLabelVisibility(curFracRef.current);
+      applyCard(curFracRef.current);
     };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-  }, [applyCamera, applyLabelVisibility]);
+  }, [applyCamera, applyLabelVisibility, applyCard]);
 
   // ── Keyboard navigation ───────────────────────────────────────────────────
   useEffect(() => {

@@ -29,7 +29,7 @@ const markers = [
     position: [0.7, 0.5, 0.8],
     lookAt: [0.7, 0.5, 0.8],
     lookPosition: [25, 0, 30],
-    label: "Web & AI",
+    label: "AI & Web",
   },
   {
     id: 3,
@@ -43,7 +43,7 @@ const markers = [
     position: [-0.5, 0.4, 1],
     lookAt: [-0.8, 0.3, 0.5],
     lookPosition: [-15, 5, 40],
-    label: "Game/XR",
+    label: "Game & XR",
   },
 ];
 

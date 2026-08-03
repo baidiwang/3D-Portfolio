@@ -4,7 +4,7 @@ export const PATH_D =
 export const categories = {
   web: {
     slug: "web",
-    label: "Web & AI",
+    label: "AI & Web",
     intro:
       "Guide the craft along the passage. Each stop is a project — or jump directly from the list.",
     stops: [
@@ -172,7 +172,7 @@ export const categories = {
 
   "game-xr": {
     slug: "game-xr",
-    label: "Game/XR",
+    label: "Game & XR",
     intro:
       "Guide the craft along the passage. Each stop is a project — or jump directly from the list.",
     stops: [
