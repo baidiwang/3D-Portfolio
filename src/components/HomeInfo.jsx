@@ -11,12 +11,10 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
           ×
         </button>
         <p className="font-mono text-center sm:text-xl">
-          Hello world!
-          <br />
-          I'm a Design/Frontend Engineer building AI interfaces and interactive
-          web products. Previously at Google and Axios, now at USC exploring AI
-          agent interfaces, 3D graphics, and real-time interactive experiences.
-          <br />
+          I'm a Design Engineer building AI interfaces and interactive web
+          products using AI tools like Claude Code and Codex. Skilled in
+          React, TypeScript, Three.js, and Framer Motion, with design tools
+          like Figma — plus a background in game and XR development.
         </p>
       </div>
     );
