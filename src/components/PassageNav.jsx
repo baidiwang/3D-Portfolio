@@ -3,6 +3,9 @@ import { Link } from "react-router-dom";
 import { PATH_D } from "../constants/categories";
 
 // ── Constants ────────────────────────────────────────────────────────────────
+// Swap experiment: "rocket" or "astronaut". Both figures' full markup stays
+// in this file either way — flip this back to revert instantly.
+const SHIP_VARIANT = "rocket";
 const N            = 600;
 const CREAM        = "#f2efe9";
 const BG           = "#050505";
@@ -256,13 +259,25 @@ export default function PassageNav({ category }) {
   // ── scrollToStop ──────────────────────────────────────────────────────────
   // Banking tilt + idle wobble — called every RAF frame
   const applyShipDynamics = useCallback((p, speed) => {
-    // Compute angular velocity for banking
     let dAngle = p.a - prevAngleRef.current;
     if (dAngle > 180)  dAngle -= 360;
     if (dAngle < -180) dAngle += 360;
     prevAngleRef.current = p.a;
-    const targetBank   = Math.max(-15, Math.min(15, dAngle * 2.4));
-    bankRef.current    = bankRef.current * 0.84 + targetBank * 0.16;
+
+    if (SHIP_VARIANT === "rocket") {
+      // Full tangent rotation: the nose points along the direction of
+      // travel. Smooth toward the target heading via the shortest angular
+      // path so it never spins the long way around at the ±180° seam.
+      const targetHeading = p.a + 90;
+      let delta = targetHeading - bankRef.current;
+      delta = ((delta + 180) % 360 + 360) % 360 - 180;
+      bankRef.current += delta * 0.16;
+    } else {
+      // Astronaut: small lean proportional to how sharply the path is
+      // curving right now — not an absolute heading.
+      const targetBank = Math.max(-15, Math.min(15, dAngle * 2.4));
+      bankRef.current   = bankRef.current * 0.84 + targetBank * 0.16;
+    }
     if (shipBankRef.current) {
       shipBankRef.current.setAttribute("transform", `rotate(${bankRef.current.toFixed(2)})`);
     }
@@ -272,14 +287,18 @@ export default function PassageNav({ category }) {
     }
   }, []);
 
-  const scrollToStop = useCallback((stopIdx) => {
+  const scrollToFrac = useCallback((frac) => {
     const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
     if (maxScroll <= 0) return;
     window.scrollTo({
-      top: category.stops[stopIdx].frac * maxScroll,
+      top: frac * maxScroll,
       behavior: reducedMotion.current ? "auto" : "smooth",
     });
-  }, [category]);
+  }, []);
+
+  const scrollToStop = useCallback((stopIdx) => {
+    scrollToFrac(category.stops[stopIdx].frac);
+  }, [category, scrollToFrac]);
 
   // ── Path sampling + camera init (before first paint) ─────────────────────
   useLayoutEffect(() => {
@@ -306,7 +325,9 @@ export default function PassageNav({ category }) {
     setSelected(null);
     selectedRef.current  = null;
     trailPosRef.current  = [];
-    bankRef.current      = 0;
+    // Rocket starts already facing the path's initial heading so it doesn't
+    // visibly spin into place on the first frame; astronaut starts upright.
+    bankRef.current      = SHIP_VARIANT === "rocket" ? pts[0].a + 90 : 0;
 
     const firstFrac = category.stops[0].frac;
 
@@ -470,12 +491,19 @@ export default function PassageNav({ category }) {
         scrollToStop(Math.min(n - 1, (selectedRef.current ?? -1) + 1));
       } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
         e.preventDefault();
-        scrollToStop(Math.max(0, (selectedRef.current ?? n) - 1));
+        const current = selectedRef.current;
+        if (current === 0) {
+          // Already at the first stop — "back" goes to the trajectory's
+          // actual origin, not a no-op re-target of the same stop.
+          scrollToFrac(0);
+        } else {
+          scrollToStop(Math.max(0, (current ?? n) - 1));
+        }
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [category, scrollToStop]);
+  }, [category, scrollToStop, scrollToFrac]);
 
   const selStop = selected !== null ? category.stops[selected] : null;
   const rm = reducedMotion.current;
@@ -538,6 +566,12 @@ export default function PassageNav({ category }) {
             <feGaussianBlur stdDeviation="1.4" result="b" />
             <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
+          {/* Rocket window: accent-toned glass, same depth technique as the visor */}
+          <radialGradient id="windowGrad" cx="35%" cy="30%" r="75%">
+            <stop offset="0%"   stopColor="#f5edc2" />
+            <stop offset="55%"  stopColor={ACCENT} />
+            <stop offset="100%" stopColor="#7a6a1e" />
+          </radialGradient>
           {/* Nebula blobs */}
           <radialGradient id="neb1" cx="50%" cy="50%" r="50%">
             <stop offset="0%"   stopColor="#3a4a8a" stopOpacity="0.18" />
@@ -689,85 +723,126 @@ export default function PassageNav({ category }) {
           ))}
         </g>
 
-        {/* Astronaut: cute 2D cartoon figure, drifting along the path */}
+        {/* Ship: SHIP_VARIANT picks the figure — swap experiment, see top of file */}
         <g ref={shipRef} style={{ pointerEvents: "none" }}>
-          {/* Bank group: subtle lean into path curves (stays upright, ±15°) */}
+          {/* Bank group: astronaut leans into curves (±15°); rocket uses this
+              same group for full tangent-heading rotation instead. */}
           <g ref={shipBankRef}>
             {/* Wobble group: gentle idle bob when parked (CSS-animated) */}
             <g
               ref={shipWobbleRef}
               style={{ animation: "shipHover 2.6s ease-in-out infinite", animationPlayState: "paused" }}
             >
-              {/* ── Legs: gently swaying, each rotated about its hip joint ── */}
-              <g transform="translate(-2.6 9.8)">
-                <g style={{
-                  animation: "legSwayL 4.6s ease-in-out infinite",
-                  animationPlayState: rm ? "paused" : "running",
-                  transformOrigin: "0px 0px",
-                }}>
-                  <path d="M 0 0 Q -1.3 5.4 -0.7 10.2" fill="none" stroke={CREAM} strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
-                  <ellipse cx="-0.7" cy="11" rx="1.9" ry="1.3" fill={BG} stroke={CREAM} strokeWidth="0.7" />
-                </g>
-              </g>
-              <g transform="translate(2.6 9.8)">
-                <g style={{
-                  animation: "legSwayR 4.6s ease-in-out infinite",
-                  animationDelay: "-2.3s",
-                  animationPlayState: rm ? "paused" : "running",
-                  transformOrigin: "0px 0px",
-                }}>
-                  <path d="M 0 0 Q 1.3 5.4 0.7 10.2" fill="none" stroke={CREAM} strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
-                  <ellipse cx="0.7" cy="11" rx="1.9" ry="1.3" fill={BG} stroke={CREAM} strokeWidth="0.7" />
-                </g>
-              </g>
+              {SHIP_VARIANT === "rocket" ? (
+                <>
+                  {/* ── Flame: layered accent glow, flickers gently when parked ── */}
+                  <g style={{
+                    animation: "flameFlicker 1.8s ease-in-out infinite",
+                    animationPlayState: rm ? "paused" : "running",
+                    transformOrigin: "0px 6px",
+                  }}>
+                    <path d="M -2.6 6 Q -1 13 0 17 Q 1 13 2.6 6 Z" fill={ACCENT} opacity="0.35" filter="url(#figureGlow)" />
+                    <path d="M -1.5 6 Q -0.5 11 0 14 Q 0.5 11 1.5 6 Z" fill={ACCENT} opacity="0.9" />
+                  </g>
 
-              {/* ── Backpack: life-support unit, peeking past the torso silhouette ── */}
-              <rect x="-7.1" y="-1" width="14.2" height="14" rx="3.2"
-                fill={BG} stroke={CREAM} strokeWidth="0.65" strokeOpacity="0.55" />
+                  {/* ── Fins ── */}
+                  <path d="M -4.3 0.5 L -8.2 7 L -4.3 5.2 Z" fill={BG} stroke={CREAM} strokeWidth="0.9" strokeLinejoin="round" />
+                  <path d="M 4.3 0.5 L 8.2 7 L 4.3 5.2 Z" fill={BG} stroke={CREAM} strokeWidth="0.9" strokeLinejoin="round" />
 
-              {/* ── Suit body: rounded, solid torso ── */}
-              <rect x="-6.5" y="-1.5" width="13" height="13" rx="6"
-                fill={BG} stroke={CREAM} strokeWidth="1.05" strokeLinejoin="round" />
+                  {/* ── Engine base ── */}
+                  <path d="M -3.6 4.6 L 3.6 4.6 L 2.6 6 L -2.6 6 Z" fill={BG} stroke={CREAM} strokeWidth="0.7" strokeLinejoin="round" />
 
-              {/* ── Arms: gently swaying, each rotated about its shoulder joint ── */}
-              <g transform="translate(-6.1 0.5)">
-                <g style={{
-                  animation: "armSwayL 3.4s ease-in-out infinite",
-                  animationPlayState: rm ? "paused" : "running",
-                  transformOrigin: "0px 0px",
-                }}>
-                  <path d="M 0 0 Q -4.8 2.7 -3.9 8.5" fill="none" stroke={CREAM} strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
-                  <circle cx="-3.9" cy="9.2" r="1.55" fill={BG} stroke={CREAM} strokeWidth="0.7" />
-                </g>
-              </g>
-              <g transform="translate(6.1 0.5)">
-                <g style={{
-                  animation: "armSwayR 3.4s ease-in-out infinite",
-                  animationDelay: "-1.7s",
-                  animationPlayState: rm ? "paused" : "running",
-                  transformOrigin: "0px 0px",
-                }}>
-                  <path d="M 0 0 Q 4.8 2.7 3.9 8.5" fill="none" stroke={CREAM} strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
-                  <circle cx="3.9" cy="9.2" r="1.55" fill={BG} stroke={CREAM} strokeWidth="0.7" />
-                </g>
-              </g>
+                  {/* ── Body ── */}
+                  <path d="M -4.4 5 L -4.4 -7 Q -4.4 -8 -3.4 -8 L 3.4 -8 Q 4.4 -8 4.4 -7 L 4.4 5 Z"
+                    fill={BG} stroke={CREAM} strokeWidth="1.05" strokeLinejoin="round" />
+                  {/* Body seam */}
+                  <line x1="-4.4" y1="1.5" x2="4.4" y2="1.5" stroke={CREAM} strokeWidth="0.24" strokeOpacity="0.3" />
 
-              {/* ── Chest light: small accent indicator ── */}
-              <circle cx="0" cy="4.5" r="1.25" fill={ACCENT} opacity="0.92" filter="url(#rimGlow)" />
-              {/* ── Suit seam ── */}
-              <line x1="-5.1" y1="1.7" x2="5.1" y2="1.7" stroke={CREAM} strokeWidth="0.26" strokeOpacity="0.3" />
+                  {/* ── Nose cone ── */}
+                  <path d="M -3.4 -8 Q -3 -13.5 0 -16 Q 3 -13.5 3.4 -8 Z"
+                    fill={BG} stroke={CREAM} strokeWidth="1.05" strokeLinejoin="round" />
+                  {/* Nose accent tip highlight */}
+                  <path d="M -1 -13.4 Q 0 -15.2 1 -13.4" fill="none" stroke={ACCENT} strokeWidth="0.5" strokeOpacity="0.65" strokeLinecap="round" />
 
-              {/* ── Neck seal: junction between helmet and suit ── */}
-              <ellipse cx="0" cy="-2.1" rx="3.6" ry="1.2" fill={BG} stroke={CREAM} strokeWidth="0.7" />
+                  {/* ── Window: accent glass reads depth instead of a flat void ── */}
+                  <circle cx="0" cy="-3.2" r="2.5" fill="url(#windowGrad)" stroke={CREAM} strokeWidth="0.6" />
+                  {/* Window glare */}
+                  <ellipse cx="-0.8" cy="-4" rx="0.9" ry="0.55" fill={CREAM} opacity="0.4" />
+                </>
+              ) : (
+                <>
+                  {/* ── Legs: gently swaying, each rotated about its hip joint ── */}
+                  <g transform="translate(-2.6 9.8)">
+                    <g style={{
+                      animation: "legSwayL 4.6s ease-in-out infinite",
+                      animationPlayState: rm ? "paused" : "running",
+                      transformOrigin: "0px 0px",
+                    }}>
+                      <path d="M 0 0 Q -1.3 5.4 -0.7 10.2" fill="none" stroke={CREAM} strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
+                      <ellipse cx="-0.7" cy="11" rx="1.9" ry="1.3" fill={BG} stroke={CREAM} strokeWidth="0.7" />
+                    </g>
+                  </g>
+                  <g transform="translate(2.6 9.8)">
+                    <g style={{
+                      animation: "legSwayR 4.6s ease-in-out infinite",
+                      animationDelay: "-2.3s",
+                      animationPlayState: rm ? "paused" : "running",
+                      transformOrigin: "0px 0px",
+                    }}>
+                      <path d="M 0 0 Q 1.3 5.4 0.7 10.2" fill="none" stroke={CREAM} strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
+                      <ellipse cx="0.7" cy="11" rx="1.9" ry="1.3" fill={BG} stroke={CREAM} strokeWidth="0.7" />
+                    </g>
+                  </g>
 
-              {/* ── Helmet ── */}
-              <circle cx="0" cy="-8.5" r="7" fill={BG} stroke={CREAM} strokeWidth="1.05" />
-              {/* Visor: gradient glass reads depth instead of a flat void */}
-              <ellipse cx="0.6" cy="-9.1" rx="4.5" ry="4" fill="url(#visorGrad)" stroke={CREAM} strokeWidth="0.55" />
-              {/* Visor reflection sweep */}
-              <path d="M -2.7 -11.6 Q 0.6 -12.9 3 -11.3" fill="none" stroke={CREAM} strokeWidth="0.4" strokeOpacity="0.24" strokeLinecap="round" />
-              {/* Visor glare */}
-              <ellipse cx="-1.3" cy="-10.7" rx="1.6" ry="1" fill={CREAM} opacity="0.38" />
+                  {/* ── Backpack: life-support unit, peeking past the torso silhouette ── */}
+                  <rect x="-7.1" y="-1" width="14.2" height="14" rx="3.2"
+                    fill={BG} stroke={CREAM} strokeWidth="0.65" strokeOpacity="0.55" />
+
+                  {/* ── Suit body: rounded, solid torso ── */}
+                  <rect x="-6.5" y="-1.5" width="13" height="13" rx="6"
+                    fill={BG} stroke={CREAM} strokeWidth="1.05" strokeLinejoin="round" />
+
+                  {/* ── Arms: gently swaying, each rotated about its shoulder joint ── */}
+                  <g transform="translate(-6.1 0.5)">
+                    <g style={{
+                      animation: "armSwayL 3.4s ease-in-out infinite",
+                      animationPlayState: rm ? "paused" : "running",
+                      transformOrigin: "0px 0px",
+                    }}>
+                      <path d="M 0 0 Q -4.8 2.7 -3.9 8.5" fill="none" stroke={CREAM} strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
+                      <circle cx="-3.9" cy="9.2" r="1.55" fill={BG} stroke={CREAM} strokeWidth="0.7" />
+                    </g>
+                  </g>
+                  <g transform="translate(6.1 0.5)">
+                    <g style={{
+                      animation: "armSwayR 3.4s ease-in-out infinite",
+                      animationDelay: "-1.7s",
+                      animationPlayState: rm ? "paused" : "running",
+                      transformOrigin: "0px 0px",
+                    }}>
+                      <path d="M 0 0 Q 4.8 2.7 3.9 8.5" fill="none" stroke={CREAM} strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" />
+                      <circle cx="3.9" cy="9.2" r="1.55" fill={BG} stroke={CREAM} strokeWidth="0.7" />
+                    </g>
+                  </g>
+
+                  {/* ── Chest light: small accent indicator ── */}
+                  <circle cx="0" cy="4.5" r="1.25" fill={ACCENT} opacity="0.92" filter="url(#rimGlow)" />
+                  {/* ── Suit seam ── */}
+                  <line x1="-5.1" y1="1.7" x2="5.1" y2="1.7" stroke={CREAM} strokeWidth="0.26" strokeOpacity="0.3" />
+
+                  {/* ── Neck seal: junction between helmet and suit ── */}
+                  <ellipse cx="0" cy="-2.1" rx="3.6" ry="1.2" fill={BG} stroke={CREAM} strokeWidth="0.7" />
+
+                  {/* ── Helmet ── */}
+                  <circle cx="0" cy="-8.5" r="7" fill={BG} stroke={CREAM} strokeWidth="1.05" />
+                  {/* Visor: gradient glass reads depth instead of a flat void */}
+                  <ellipse cx="0.6" cy="-9.1" rx="4.5" ry="4" fill="url(#visorGrad)" stroke={CREAM} strokeWidth="0.55" />
+                  {/* Visor reflection sweep */}
+                  <path d="M -2.7 -11.6 Q 0.6 -12.9 3 -11.3" fill="none" stroke={CREAM} strokeWidth="0.4" strokeOpacity="0.24" strokeLinecap="round" />
+                  {/* Visor glare */}
+                  <ellipse cx="-1.3" cy="-10.7" rx="1.6" ry="1" fill={CREAM} opacity="0.38" />
+                </>
+              )}
             </g>
           </g>
         </g>

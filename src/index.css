@@ -94,6 +94,10 @@ g[role="button"]:focus-visible .marker-kbd-ring { opacity: 1 !important; }
   0%, 100% { transform: rotate(2deg); }
   50%       { transform: rotate(-2.5deg); }
 }
+@keyframes flameFlicker {
+  0%, 100% { transform: scaleY(1) scaleX(1); opacity: 0.95; }
+  50%       { transform: scaleY(1.12) scaleX(0.94); opacity: 0.8; }
+}
 @keyframes hintFloat {
   0%, 100% { opacity: 0.62; }
   50%       { opacity: 0.95; }
