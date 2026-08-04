@@ -54,7 +54,7 @@ export function SpaceStation({
   setCurrentStage,
   currentFocusPoint,
   setIsLoaded,
-  setShowTypewriter,
+  setShowGreeting,
   ...props
 }) {
   const [targetPosition, setTargetPosition] = useState(null);
@@ -197,7 +197,7 @@ export function SpaceStation({
     } else {
       setCurrentStage(marker.id);
       setTargetPosition(marker);
-      setShowTypewriter(false);
+      setShowGreeting(false);
     }
   };
 
@@ -211,7 +211,7 @@ export function SpaceStation({
         lookPosition: [0, 0, 50],
         label: "",
       });
-      setShowTypewriter(true);
+      setShowGreeting(true);
     }
   }, [currentStage]);
 
@@ -345,42 +345,36 @@ export function SpaceStation({
   );
 }
 
+// Spring-animated hover feedback (scale + glow) needs no per-frame state
+// updates — react-spring drives it directly, so it costs nothing extra on
+// idle frames. Respects prefers-reduced-motion by skipping the tween.
+const prefersReducedMotion =
+  typeof window !== "undefined" &&
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 function GlowingMarker({ marker, showMarkers, ...rest }) {
   const meshRef = useRef();
-  const [intensity, setIntensity] = useState(0);
   const [hovered, setHovered] = useState(false);
 
-  useEffect(() => {
-    if (showMarkers) {
-      setIntensity(3);
-    }
-  }, [showMarkers]);
-
-  useFrame(({ clock }) => {
-    const pulse = Math.sin(clock.elapsedTime * 3) * 1.5 + 3;
-    setIntensity(hovered ? pulse + 2 : pulse);
+  const { scale, glowOpacity } = useSpring({
+    scale: hovered ? 2.2 : 1.8,
+    glowOpacity: hovered ? 0.85 : 0.5,
+    config: { tension: 320, friction: 22 },
+    immediate: prefersReducedMotion,
   });
 
   return (
-    <mesh
+    <a.mesh
       ref={meshRef}
       position={marker.position}
-      onPointerOver={() => setHovered(true)}
+      onPointerOver={() => showMarkers && setHovered(true)}
       onPointerOut={() => setHovered(false)}
-      scale={hovered ? 2.2 : 1.8}
+      scale={scale}
       {...rest}
     >
-      {/* <sphereGeometry args={[0.015, 32, 32]} /> */}
-      {/* <meshStandardMaterial
-        color={hovered ? "orange" : "#a85032"}
-        transparent
-        opacity={showMarkers ? 1 : 0} // buttons fade in
-        emissive={hovered ? "yellow" : "#a85032"}
-        emissiveIntensity={intensity}
-      /> */}
       <mesh position={[0, 0.035, -0.01]}>
         <planeGeometry args={[0.19, 0.02]} />
-        <meshBasicMaterial color="yellow" transparent opacity={0.5} />
+        <a.meshBasicMaterial color="yellow" transparent opacity={glowOpacity} />
       </mesh>
       <Text
         position={[0, 0.05, 0]}
@@ -395,6 +389,6 @@ function GlowingMarker({ marker, showMarkers, ...rest }) {
       >
         {marker.label}
       </Text>
-    </mesh>
+    </a.mesh>
   );
 }

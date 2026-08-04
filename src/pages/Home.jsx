@@ -1,6 +1,6 @@
 import { Canvas } from "@react-three/fiber";
+import { AnimatePresence, motion, MotionConfig } from "framer-motion";
 import { Suspense, useEffect, useRef, useState } from "react";
-import { Typewriter } from "react-simple-typewriter";
 
 import { HomeInfo, Loader } from "../components";
 import { SpaceStation } from "../models/spaceStation.jsx";
@@ -10,11 +10,11 @@ const Home = () => {
   const [currentStage, setCurrentStage] = useState(null);
   const [isRotating, setIsRotating] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [showTypewriter, setShowTypewriter] = useState(true);
+  const [showGreeting, setShowGreeting] = useState(true);
 
   useEffect(() => {
     if (currentStage === 0) {
-      setShowTypewriter(true);
+      setShowGreeting(true);
     }
   }, [currentStage]);
 
@@ -58,70 +58,75 @@ const Home = () => {
   }, [currentStage]);
 
   return (
-    <section className="w-full h-screen relative overflow-hidden">
-      {!currentStage && (
-        <div className="absolute top-24 left-0 right-0 z-10 flex items-center justify-center">
-          {isLoaded && showTypewriter && (
-            <h1 className="font-mono text-white text-center text-2xl sm:text-2xl font-bold leading-snug">
-              <Typewriter
-                words={["Hi, I'm Baidi", "A UX/Design Engineer in NYC"]}
-                loop={false}
-                cursor
-                cursorStyle="_"
-                typeSpeed={50}
-                deleteSpeed={30}
-                delaySpeed={1200}
-              />
-            </h1>
-          )}
-        </div>
-      )}
-      <div className="absolute top-28 left-0 right-0 z-50 flex items-center justify-center pointer-events-auto">
-        {currentStage && (
-          <HomeInfo
-            currentStage={currentStage}
-            setCurrentStage={setCurrentStage}
-          />
+    <MotionConfig reducedMotion="user">
+      <section className="w-full h-screen relative overflow-hidden">
+        {!currentStage && (
+          <div className="absolute top-24 left-0 right-0 z-10 flex items-center justify-center">
+            <AnimatePresence>
+              {isLoaded && showGreeting && (
+                <motion.h1
+                  key="greeting"
+                  className="font-accent text-white text-center text-[40px] leading-none"
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }}
+                  exit={{ opacity: 0, transition: { duration: 0.25 } }}
+                >
+                  Baidi Wang
+                </motion.h1>
+              )}
+            </AnimatePresence>
+          </div>
         )}
-      </div>
+        <div className="absolute top-28 left-0 right-0 z-50 flex items-center justify-center pointer-events-auto">
+          <AnimatePresence mode="wait">
+            {currentStage && (
+              <HomeInfo
+                key={currentStage}
+                currentStage={currentStage}
+                setCurrentStage={setCurrentStage}
+              />
+            )}
+          </AnimatePresence>
+        </div>
 
-      <div className="absolute inset-0 z-10 pointer-events-none">
-        <Canvas
-          className={`w-full h-screen bg-transparent ${
-            isRotating ? "cursor-grabbing" : "cursor-grab"
-          }`}
-          camera={{ near: 0.1, far: 1000, position: [0, 0, 50] }}
-        >
-          <Suspense fallback={<Loader />}>
-            <directionalLight position={[1, 1, 1]} intensity={2} />
-            <ambientLight intensity={0.5} />
-            <pointLight position={[10, 5, 10]} intensity={2} />
-            <spotLight
-              position={[0, 50, 10]}
-              angle={0.15}
-              penumbra={1}
-              intensity={2}
-            />
-            <hemisphereLight
-              skyColor="#b1e1ff"
-              groundColor="#000000"
-              intensity={1}
-            />
+        <div className="absolute inset-0 z-10 pointer-events-none">
+          <Canvas
+            className={`w-full h-screen bg-transparent ${
+              isRotating ? "cursor-grabbing" : "cursor-grab"
+            }`}
+            camera={{ near: 0.1, far: 1000, position: [0, 0, 50] }}
+          >
+            <Suspense fallback={<Loader />}>
+              <directionalLight position={[1, 1, 1]} intensity={2} />
+              <ambientLight intensity={0.5} />
+              <pointLight position={[10, 5, 10]} intensity={2} />
+              <spotLight
+                position={[0, 50, 10]}
+                angle={0.15}
+                penumbra={1}
+                intensity={2}
+              />
+              <hemisphereLight
+                skyColor="#b1e1ff"
+                groundColor="#000000"
+                intensity={1}
+              />
 
-            <Space isRotating={isRotating} />
-            <SpaceStation
-              isRotating={isRotating}
-              setIsRotating={setIsRotating}
-              currentStage={currentStage}
-              setCurrentStage={setCurrentStage}
-              rotation={[0.1, 6.15, 0]}
-              setIsLoaded={setIsLoaded}
-              setShowTypewriter={setShowTypewriter}
-            />
-          </Suspense>
-        </Canvas>
-      </div>
-    </section>
+              <Space isRotating={isRotating} />
+              <SpaceStation
+                isRotating={isRotating}
+                setIsRotating={setIsRotating}
+                currentStage={currentStage}
+                setCurrentStage={setCurrentStage}
+                rotation={[0.1, 6.15, 0]}
+                setIsLoaded={setIsLoaded}
+                setShowGreeting={setShowGreeting}
+              />
+            </Suspense>
+          </Canvas>
+        </div>
+      </section>
+    </MotionConfig>
   );
 };
 

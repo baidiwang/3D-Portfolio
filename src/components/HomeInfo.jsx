@@ -1,9 +1,24 @@
+import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+
+// .info-box is position:absolute, and its own × button is positioned
+// absolute against it. Animating with Framer's `y` (a transform) would make
+// this element a new containing block for that whole time — transform on a
+// non-static element becomes the containing block for absolute descendants
+// per spec — which briefly resizes/repositions the card against the wrong
+// box. marginTop gives the same slide without ever touching `transform`,
+// so it can't affect containing-block resolution, and it doesn't fight
+// animate-float's own `transform: translateY()` keyframes either.
+const cardMotion = {
+  initial: { opacity: 0, marginTop: 16 },
+  animate: { opacity: 1, marginTop: 0, transition: { duration: 0.35, ease: "easeOut" } },
+  exit: { opacity: 0, marginTop: -8, transition: { duration: 0.2, ease: "easeIn" } },
+};
 
 const HomeInfo = ({ currentStage, setCurrentStage }) => {
   if (currentStage === 1)
     return (
-      <div className="info-box animate-float">
+      <motion.div className="info-box animate-float" {...cardMotion}>
         <button
           className="absolute top-2 right-3 text-white text-xl hover:text-red-400 hidden sm:block"
           onClick={() => setCurrentStage(0)}
@@ -16,12 +31,12 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
           React, TypeScript, Three.js, and Framer Motion, with design tools
           like Figma — plus a background in game and XR development.
         </p>
-      </div>
+      </motion.div>
     );
 
   if (currentStage === 2) {
     return (
-      <div className="info-box animate-float">
+      <motion.div className="info-box animate-float" {...cardMotion}>
         <button
           className="absolute top-2 right-3 text-white text-xl hover:text-red-400 hidden sm:block"
           onClick={() => setCurrentStage(0)}
@@ -44,13 +59,13 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
         >
           View AI & Web Projects
         </Link>
-      </div>
+      </motion.div>
     );
   }
 
   if (currentStage === 3) {
     return (
-      <div className="info-box animate-float">
+      <motion.div className="info-box animate-float" {...cardMotion}>
         <button
           className="absolute top-2 right-3 text-white text-xl hover:text-red-400 hidden sm:block"
           onClick={() => setCurrentStage(0)}
@@ -58,13 +73,14 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
           ×
         </button>
         <p className="font-mono text-center sm:text-xl">
-          Design work spanning UI/UX, data visualization, and interface design,
-          from Figma to shipped interfaces.
+          Design work spanning UI/UX, data visualization, and interface
+          design, from Figma to shipped interfaces.
           <br />
           <br />
           <span>
-            Built with <strong>Figma, D3.js, Illustrator, After Effects</strong>
-            , and more.
+            Built with{" "}
+            <strong>Figma, D3.js, Illustrator, After Effects</strong>, and
+            more.
           </span>
         </p>
         <Link
@@ -73,13 +89,13 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
         >
           View Design Work
         </Link>
-      </div>
+      </motion.div>
     );
   }
 
   if (currentStage === 4) {
     return (
-      <div className="info-box animate-float">
+      <motion.div className="info-box animate-float" {...cardMotion}>
         <button
           className="absolute top-2 right-3 text-white text-xl hover:text-red-400 hidden sm:block"
           onClick={() => setCurrentStage(0)}
@@ -93,8 +109,8 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
           <br />
           <span>
             Built with{" "}
-            <strong>Unity, C#, TypeScript, Lens Studio, Blender</strong>, and
-            more.
+            <strong>Unity, C#, TypeScript, Lens Studio, Blender</strong>,
+            and more.
           </span>
         </p>
         <Link
@@ -103,7 +119,7 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
         >
           View Game & XR Projects
         </Link>
-      </div>
+      </motion.div>
     );
   }
 
