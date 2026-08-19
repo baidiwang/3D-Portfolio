@@ -106,6 +106,19 @@ export const categories = {
       "Guide the craft along the passage. Each stop is a project — or jump directly from the list.",
     stops: [
       {
+        id: "design-breadcrumb",
+        title: "Breadcrumb",
+        category: "Interaction & Character Design",
+        oneLineDescription:
+          "Designing the desktop-pet toaster's character and interaction language — its states, marker gestures, and the gentle 'you were here' reveal — plus the information hierarchy that turns a scattered attention trail back into a clear 'where was I' picture.",
+        tags: ["Character Design", "Interaction Design", "Lovable", "Claude Design"],
+        thumbnail: "/thumbnails/breadcrumb.gif",
+        links: [
+          { label: "GitHub", url: "https://github.com/baidiwang/breadcrumb" },
+        ],
+        frac: 0.12,
+      },
+      {
         id: "design-lookcloser",
         title: "Look Closer",
         category: "Interaction Design",
@@ -116,7 +129,7 @@ export const categories = {
         links: [
           { label: "Live", url: "https://look-closer-masterpiece.vercel.app/" },
         ],
-        frac: 0.12,
+        frac: 0.31,
       },
       {
         id: "design-1",
@@ -127,7 +140,7 @@ export const categories = {
         tags: ["Voice UI", "Interaction Design", "Figma", "Real-time UX"],
         thumbnail: "/thumbnails/lily.gif",
         links: [{ label: "Live", url: "https://voice-first-chat.vercel.app/" }],
-        frac: 0.38,
+        frac: 0.5,
       },
       {
         id: "design-2",
@@ -143,7 +156,7 @@ export const categories = {
             url: "https://medium.com/@WangPortfolio/daily-data-viz-graphics-bc698435092a",
           },
         ],
-        frac: 0.62,
+        frac: 0.69,
       },
       {
         id: "design-3",
