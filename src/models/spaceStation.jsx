@@ -33,16 +33,16 @@ const markers = [
   },
   {
     id: 3,
-    position: [-0.2, -0.2, 0.9],
-    lookAt: [0.7, 0.5, 0.8],
-    lookPosition: [-10, -10, 25],
+    position: [-0.5, 0.4, 1],
+    lookAt: [-0.8, 0.3, 0.5],
+    lookPosition: [-15, 5, 40],
     label: "Design",
   },
   {
     id: 4,
-    position: [-0.5, 0.4, 1],
-    lookAt: [-0.8, 0.3, 0.5],
-    lookPosition: [-15, 5, 40],
+    position: [-0.2, -0.2, 0.9],
+    lookAt: [0.7, 0.5, 0.8],
+    lookPosition: [-10, -10, 25],
     label: "Game & XR",
   },
 ];
