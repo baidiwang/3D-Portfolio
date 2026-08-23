@@ -27,9 +27,11 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
         </button>
         <p className="font-mono text-center sm:text-xl">
           I'm a Design Engineer building AI interfaces and interactive web
-          products using AI tools like Claude Code and Codex. Skilled in
-          React, TypeScript, Three.js, and Framer Motion, with design tools
-          like Figma — plus a background in game and XR development.
+          products using AI tools like Claude Code and Codex. Currently
+          pursuing an M.S. in Integrated Design, Business & Technology at
+          USC. Skilled in React, TypeScript, Three.js, and Framer Motion,
+          with design tools like Figma — plus a background in game and XR
+          development.
         </p>
       </motion.div>
     );
@@ -73,13 +75,13 @@ const HomeInfo = ({ currentStage, setCurrentStage }) => {
           ×
         </button>
         <p className="font-mono text-center sm:text-xl">
-          Design work spanning UI/UX, data visualization, and interface
-          design, from Figma to shipped interfaces.
+          Design work spanning UI/UX, data visualization, and interaction
+          design, from Figma to interactive interfaces.
           <br />
           <br />
           <span>
             Built with{" "}
-            <strong>Figma, D3.js, Illustrator, After Effects</strong>, and
+            <strong>Figma, Claude Design, Lovable, D3.js</strong>, and
             more.
           </span>
         </p>
